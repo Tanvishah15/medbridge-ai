@@ -1,0 +1,23 @@
+SYNTHETIC MRI REPORT — FOR DEMONSTRATION ONLY
+Report ID: RPT-003
+Patient ID: PAT-003
+Department: Radiology
+
+Study: Brain MRI without contrast
+
+Findings:
+- Small chronic ischemic changes in periventricular white matter
+- No acute infarct
+- No mass lesion
+- Ventricles normal in size
+- No midline shift
+
+Impression:
+Mild chronic microvascular changes. No acute intracranial abnormality.
+
+Recommendation:
+Clinical correlation advised. Manage vascular risk factors (blood pressure, cholesterol, diabetes).
+Neurology follow-up if new symptoms develop.
+
+Radiologist: Dr. R. Demo (Synthetic)
+Facility: Demo Imaging Center

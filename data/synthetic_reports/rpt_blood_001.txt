@@ -1,0 +1,21 @@
+SYNTHETIC LAB REPORT — FOR DEMONSTRATION ONLY
+Report ID: RPT-002
+Patient ID: PAT-002
+Department: Clinical Laboratory
+
+Results:
+- Fasting Glucose: 142 mg/dL (Elevated)
+- HbA1c: 7.1% (Elevated)
+- LDL Cholesterol: 168 mg/dL (Elevated)
+- HDL Cholesterol: 38 mg/dL (Below optimal)
+- Triglycerides: 185 mg/dL (Elevated)
+
+Impression:
+Findings consistent with Type 2 Diabetes and dyslipidemia.
+Recommend lifestyle counseling and medication review.
+
+Recommendation:
+Follow up with primary care within 2 weeks. Repeat labs in 3 months.
+
+Attending Physician: Dr. M. Test (Synthetic)
+Facility: Demo General Hospital

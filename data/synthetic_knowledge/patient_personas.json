@@ -1,0 +1,30 @@
+[
+  {
+    "id": "PAT-001",
+    "language": "Hindi",
+    "scenario": "Ear discharge for 3 days",
+    "report_file": "rpt_ent_001.txt",
+    "sample_message": "Mere kaan mein 3 din se ras aa rahi hai. Yeh report samjhao."
+  },
+  {
+    "id": "PAT-002",
+    "language": "Spanish",
+    "scenario": "Grandmother needs blood test explanation",
+    "report_file": "rpt_blood_001.txt",
+    "sample_message": "Explain this blood test to my grandmother in Spanish."
+  },
+  {
+    "id": "PAT-003",
+    "language": "Arabic",
+    "scenario": "Family MRI summary",
+    "report_file": "rpt_mri_001.txt",
+    "sample_message": "لخص تقرير الرنين المغناطيسي لعائلتي"
+  },
+  {
+    "id": "PAT-004",
+    "language": "English",
+    "scenario": "Low medical literacy diabetes report",
+    "report_file": "rpt_blood_001.txt",
+    "sample_message": "Explain my blood test in very simple words."
+  }
+]

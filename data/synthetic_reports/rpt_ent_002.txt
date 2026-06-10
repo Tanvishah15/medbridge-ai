@@ -1,0 +1,19 @@
+SYNTHETIC MEDICAL REPORT — FOR DEMONSTRATION ONLY
+Report ID: RPT-004
+Patient ID: PAT-004
+Department: ENT (Ear, Nose, Throat)
+
+Clinical Summary:
+Bilateral Otitis Media with serous effusion. Right ear more affected than left.
+Eustachian tube dysfunction suspected.
+
+Findings:
+- Bilateral middle ear effusion
+- Right tympanic membrane retracted
+- Mild hearing loss on audiometry screening
+
+Recommendation:
+Nasal decongestant as directed. ENT follow-up in 10 days. Avoid water in ears.
+
+Attending Physician: Dr. A. Sample (Synthetic)
+Facility: Demo City Clinic

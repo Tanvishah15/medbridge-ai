@@ -1,0 +1,19 @@
+SYNTHETIC MEDICAL REPORT — FOR DEMONSTRATION ONLY
+Report ID: RPT-001
+Patient ID: PAT-001
+Department: ENT (Ear, Nose, Throat)
+
+Clinical Summary:
+Patient exhibits signs of Otitis Media with fluid accumulation in the middle ear.
+Tympanic membrane appears inflamed. Mild conductive hearing reduction noted.
+
+Findings:
+- Middle ear fluid present
+- No mastoid involvement
+- No skull base abnormalities
+
+Recommendation:
+Follow-up in 7 days. Continue prescribed antibiotic course. Return if fever or severe pain develops.
+
+Attending Physician: Dr. S. Demo (Synthetic)
+Facility: Demo General Hospital
