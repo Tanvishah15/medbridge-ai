@@ -1,6 +1,7 @@
 import logging
 
 from agents.base import get_chat_client
+from agents.logging_config import log_agent_input, log_agent_output
 from agents.prompts import EXPLANATION_AGENT_INSTRUCTIONS
 
 logger = logging.getLogger(__name__)
@@ -12,10 +13,13 @@ async def generate_explanation(
     symptoms: str,
     literacy_level: str = "simple",
 ) -> str:
-    logger.info(
-        "PatientExplanationAgent: literacy=%s symptoms=%r",
-        literacy_level,
-        symptoms[:120],
+    agent_name = "PatientExplanationAgent"
+    log_agent_input(
+        agent_name,
+        report_summary=report_summary,
+        knowledge=knowledge,
+        symptoms=symptoms,
+        literacy_level=literacy_level,
     )
     client = get_chat_client()
     agent = client.as_agent(
@@ -30,5 +34,5 @@ async def generate_explanation(
     Write a clear, empathetic explanation. Connect symptoms to findings.
     """
     explanation = (await agent.run(prompt)).text
-    logger.info("PatientExplanationAgent: generated %d chars", len(explanation))
+    log_agent_output(agent_name, explanation=explanation)
     return explanation

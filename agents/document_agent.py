@@ -3,6 +3,7 @@ import logging
 import re
 
 from agents.base import get_chat_client
+from agents.logging_config import log_agent_input, log_agent_output
 from agents.prompts import DOCUMENT_AGENT_INSTRUCTIONS
 from agents.models import ReportStructure
 
@@ -18,7 +19,8 @@ def _parse_json_response(text: str) -> dict:
 
 
 async def parse_report(report_text: str) -> ReportStructure:
-    logger.info("DocumentIntelligenceAgent: parsing report (%d chars)", len(report_text))
+    agent_name = "DocumentIntelligenceAgent"
+    log_agent_input(agent_name, report_text=report_text)
     client = get_chat_client()
     agent = client.as_agent(
         name="DocumentIntelligenceAgent",
@@ -29,8 +31,15 @@ async def parse_report(report_text: str) -> ReportStructure:
     try:
         data = _parse_json_response(result.text)
         report = ReportStructure(**data, raw_text=report_text)
-        logger.info("DocumentIntelligenceAgent: diagnosis=%s", report.diagnosis)
+        log_agent_output(
+            agent_name,
+            diagnosis=report.diagnosis,
+            findings=report.findings,
+            recommendations=report.recommendations,
+        )
         return report
     except Exception:
-        logger.warning("DocumentIntelligenceAgent: JSON parse failed, using fallback")
-        return ReportStructure(raw_text=report_text, diagnosis="See report", findings=[result.text])
+        logger.warning("%s | JSON parse failed, using fallback", agent_name)
+        fallback = ReportStructure(raw_text=report_text, diagnosis="See report", findings=[result.text])
+        log_agent_output(agent_name, diagnosis=fallback.diagnosis, findings=fallback.findings)
+        return fallback

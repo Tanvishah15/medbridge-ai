@@ -3,6 +3,7 @@ import logging
 import re
 
 from agents.base import get_chat_client
+from agents.logging_config import log_agent_input, log_agent_output
 from agents.prompts import SAFETY_AGENT_INSTRUCTIONS
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,8 @@ def _detect_emergency(text: str) -> list[str]:
 
 
 async def validate_response(response: str) -> dict:
-    logger.info("SafetyAgent: validating response (%d chars)", len(response))
+    agent_name = "SafetyAgent"
+    log_agent_input(agent_name, response=response)
     client = get_chat_client()
     agent = client.as_agent(
         name="SafetyAgent",
@@ -63,7 +65,7 @@ async def validate_response(response: str) -> dict:
         result = await agent.run(prompt)
         parsed = _parse_json_response(result.text)
     except Exception:
-        logger.warning("SafetyAgent: LLM review failed, using rule-based fallback")
+        logger.warning("%s | LLM review failed, using rule-based fallback", agent_name)
         parsed = {
             "safe": len(flags) == 0 and not emergency,
             "issues": flags + emergency,
@@ -85,9 +87,10 @@ async def validate_response(response: str) -> dict:
                 + "\n\nSeek emergency care immediately for serious symptoms."
             )
 
-    logger.info(
-        "SafetyAgent: safe=%s issues=%d",
-        parsed.get("safe"),
-        len(parsed.get("issues", [])),
+    log_agent_output(
+        agent_name,
+        safe=parsed.get("safe"),
+        issues=parsed.get("issues"),
+        revised_response=parsed.get("revised_response"),
     )
     return parsed

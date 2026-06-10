@@ -4,6 +4,7 @@ import re
 from agent_framework import Agent
 
 from agents.base import get_chat_client
+from agents.logging_config import log_agent_input, log_agent_output
 from agents.prompts import KNOWLEDGE_AGENT_INSTRUCTIONS
 from config import AZURE_SEARCH_ENDPOINT, KNOWLEDGE_BASE_NAME, MCP_CONNECTION_NAME
 
@@ -20,7 +21,8 @@ def _extract_citations(text: str) -> list[str]:
 
 
 async def retrieve_medical_knowledge(query: str, report_context: str = "") -> dict:
-    logger.info("MedicalKnowledgeAgent: query=%r", query[:120])
+    agent_name = "MedicalKnowledgeAgent"
+    log_agent_input(agent_name, query=query, report_context=report_context)
     client = get_chat_client()
     mcp_tool = client.get_mcp_tool(
         name="medbridge_knowledge_base",
@@ -45,5 +47,6 @@ Retrieve grounded medical knowledge. Include citations.
         result = await agent.run(prompt)
 
     citations = _extract_citations(result.text)
-    logger.info("MedicalKnowledgeAgent: retrieved %d citations", len(citations))
-    return {"answer": result.text, "citations": citations}
+    output = {"answer": result.text, "citations": citations}
+    log_agent_output(agent_name, answer=result.text, citations=citations)
+    return output

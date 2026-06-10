@@ -3,6 +3,7 @@ import logging
 import re
 
 from agents.base import get_chat_client
+from agents.logging_config import log_agent_input, log_agent_output
 from agents.models import PatientContext, ReportStructure
 from agents.prompts import CLARIFICATION_AGENT_INSTRUCTIONS
 
@@ -26,10 +27,13 @@ async def get_clarification_questions(
     report: ReportStructure,
     patient: PatientContext,
 ) -> list[str]:
-    logger.info(
-        "ClarificationAgent: language=%s symptoms=%r",
-        patient.language,
-        patient.symptoms[:120],
+    agent_name = "ClarificationAgent"
+    log_agent_input(
+        agent_name,
+        diagnosis=report.diagnosis,
+        findings=report.findings,
+        symptoms=patient.symptoms,
+        language=patient.language,
     )
     client = get_chat_client()
     agent = client.as_agent(
@@ -45,8 +49,10 @@ async def get_clarification_questions(
     result = await agent.run(prompt)
     try:
         questions = _parse_json_list(result.text)
-        logger.info("ClarificationAgent: generated %d questions", len(questions))
+        log_agent_output(agent_name, questions=questions)
         return questions
     except Exception:
-        logger.warning("ClarificationAgent: JSON parse failed, using raw text")
-        return [result.text]
+        logger.warning("%s | JSON parse failed, using raw text", agent_name)
+        questions = [result.text]
+        log_agent_output(agent_name, questions=questions)
+        return questions

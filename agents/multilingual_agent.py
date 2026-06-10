@@ -1,6 +1,7 @@
 import logging
 
 from agents.base import get_chat_client
+from agents.logging_config import log_agent_input, log_agent_output
 from agents.prompts import MULTILINGUAL_AGENT_INSTRUCTIONS
 
 logger = logging.getLogger(__name__)
@@ -11,11 +12,12 @@ async def translate_explanation(
     target_language: str,
     audience: str = "patient",
 ) -> str:
-    logger.info(
-        "MultilingualAgent: target=%s audience=%s input_chars=%d",
-        target_language,
-        audience,
-        len(explanation),
+    agent_name = "MultilingualAgent"
+    log_agent_input(
+        agent_name,
+        explanation=explanation,
+        target_language=target_language,
+        audience=audience,
     )
     client = get_chat_client()
     agent = client.as_agent(
@@ -31,5 +33,5 @@ async def translate_explanation(
     {explanation}
     """
     translated = (await agent.run(prompt)).text
-    logger.info("MultilingualAgent: output %d chars", len(translated))
+    log_agent_output(agent_name, translated=translated)
     return translated
