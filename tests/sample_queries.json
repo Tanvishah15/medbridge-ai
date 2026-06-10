@@ -1,0 +1,12 @@
+[
+  {
+    "query": "Mere kaan mein ras aa rahi hai. Report mein kya hai?",
+    "expected_contains": ["ear", "fluid", "infection"],
+    "language": "Hindi"
+  },
+  {
+    "query": "What does elevated LDL mean?",
+    "expected_contains": ["cholesterol"],
+    "language": "English"
+  }
+]
