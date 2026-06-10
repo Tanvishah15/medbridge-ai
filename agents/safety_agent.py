@@ -55,14 +55,17 @@ async def validate_response(response: str) -> dict:
     If emergency symptoms are present, advise seeking emergency care immediately.
     Always include a consult-your-doctor disclaimer if missing.
     """
-    result = await agent.run(prompt)
     try:
+        result = await agent.run(prompt)
         parsed = _parse_json_response(result.text)
     except Exception:
         parsed = {
             "safe": len(flags) == 0 and not emergency,
             "issues": flags + emergency,
-            "revised_response": response,
+            "revised_response": (
+                "Your report suggests findings that should be discussed with a healthcare professional. "
+                "Please consult your doctor. This is educational information, not medical advice."
+            ),
         }
 
     if emergency:
