@@ -51,11 +51,13 @@
 
 ---
 
-## MCP Connection (Step 112 — pending)
-- **Connection name (planned):** `medbridge-kb-mcp-connection`
+## MCP Connection (Step 112) ✅
+- **Connection name:** `medbridge-kb-mcp-connection`
+- **Category:** RemoteTool
+- **Auth:** Project Managed Identity
 - **MCP endpoint:** `https://medbridgesearchtj.search.windows.net/knowledgebases/medbridge-medical-kb/mcp?api-version=2026-05-01-preview`
 - **Tool to verify (Step 113):** `knowledge_base_retrieve`
-- **Status:** To be configured in Phase 5
+- **Created via:** `scripts/create_mcp_connection.py`
 
 ---
 
