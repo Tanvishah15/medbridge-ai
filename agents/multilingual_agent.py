@@ -1,3 +1,23 @@
-"""Multilingual Communication Agent — translates for patient/family audience."""
+from agents.base import get_chat_client
+from agents.prompts import MULTILINGUAL_AGENT_INSTRUCTIONS
 
-# Implemented in Phase 5 (Step 140)
+
+async def translate_explanation(
+    explanation: str,
+    target_language: str,
+    audience: str = "patient",
+) -> str:
+    client = get_chat_client()
+    agent = client.as_agent(
+        name="MultilingualAgent",
+        instructions=MULTILINGUAL_AGENT_INSTRUCTIONS,
+    )
+    prompt = f"""
+    Translate and adapt this explanation to {target_language}.
+    Audience: {audience}
+    Include disclaimer in {target_language}.
+
+    Explanation:
+    {explanation}
+    """
+    return (await agent.run(prompt)).text
