@@ -1,6 +1,23 @@
-import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+import pytest
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "synthetic_reports"
+
+
+@pytest.fixture
+def ent_report() -> str:
+    return (DATA_DIR / "rpt_ent_001.txt").read_text(encoding="utf-8")
+
+
+@pytest.fixture
+def blood_report() -> str:
+    return (DATA_DIR / "rpt_blood_001.txt").read_text(encoding="utf-8")
+
+
+@pytest.fixture
+def mri_report() -> str:
+    return (DATA_DIR / "rpt_mri_001.txt").read_text(encoding="utf-8")

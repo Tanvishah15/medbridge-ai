@@ -12,9 +12,8 @@ from agents.safety_agent import validate_response
 
 load_dotenv()
 
-ENT_REPORT = (Path(__file__).resolve().parent.parent / "data" / "synthetic_reports" / "rpt_ent_001.txt").read_text(
-    encoding="utf-8"
-)
+DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "synthetic_reports"
+ENT_REPORT = (DATA_DIR / "rpt_ent_001.txt").read_text(encoding="utf-8")
 
 
 @pytest.mark.asyncio
@@ -31,7 +30,8 @@ async def test_knowledge_agent_otitis_media():
     result = await retrieve_medical_knowledge("What is Otitis Media?")
     answer = result["answer"].lower()
     assert "otitis" in answer or "middle ear" in answer
-    assert result["citations"] or "source" in answer or "†" in result["answer"]
+    assert result["citations"] or "source" in answer or "†" in result["answer"] or "【" in result["answer"]
+    assert result.get("ungrounded_drugs", []) == []
 
 
 @pytest.mark.asyncio

@@ -14,6 +14,15 @@ Do not upload real patient information.
 ## Architecture
 See [docs/architecture.md](docs/architecture.md)
 
+## Sample Outputs
+See [docs/sample_outputs.md](docs/sample_outputs.md) for agent demo output examples.
+
+## Testing
+```powershell
+pytest tests/ -v
+python scripts/profile_agents.py
+```
+
 ## Project Structure
 ```
 medbridge-ai/
