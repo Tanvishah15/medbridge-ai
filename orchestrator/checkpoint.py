@@ -22,6 +22,7 @@ class SessionCheckpoint(BaseModel):
     patient: PatientContext
     trace: list[dict] = Field(default_factory=list)
     clarification_questions: list[str] = Field(default_factory=list)
+    clarification_round: int = 0
 
 
 def get_handoff_checkpoint_storage():
@@ -41,6 +42,7 @@ def save_session_checkpoint(
     trace: list[dict],
     clarification_questions: list[str],
     session_id: str | None = None,
+    clarification_round: int = 1,
 ) -> str:
     SESSION_DIR.mkdir(parents=True, exist_ok=True)
     sid = session_id or str(uuid.uuid4())
@@ -50,6 +52,7 @@ def save_session_checkpoint(
         patient=patient,
         trace=trace,
         clarification_questions=clarification_questions,
+        clarification_round=clarification_round,
     )
     _session_path(sid).write_text(checkpoint.model_dump_json(indent=2), encoding="utf-8")
     logger.info("Saved session checkpoint %s", sid)

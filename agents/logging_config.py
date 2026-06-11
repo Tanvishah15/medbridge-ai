@@ -37,4 +37,32 @@ def log_agent_output(agent: str, **fields: Any) -> None:
         log.info("%s | OUTPUT | %s=%s", agent, key, preview(value))
 
 
+def estimate_tokens(*texts: str) -> int:
+    """Rough token estimate for cost tracking (Step 207)."""
+    total_chars = sum(len(text or "") for text in texts)
+    return max(1, total_chars // 4)
+
+
+def log_workflow_metrics(
+    workflow: str,
+    *,
+    duration_seconds: float,
+    trace_steps: int,
+    report_chars: int,
+    explanation_chars: int,
+    estimated_tokens: int,
+) -> None:
+    log = logging.getLogger("medbridge.metrics")
+    log.info(
+        "%s | METRICS | duration_s=%.2f trace_steps=%d report_chars=%d "
+        "explanation_chars=%d estimated_tokens=%d",
+        workflow,
+        duration_seconds,
+        trace_steps,
+        report_chars,
+        explanation_chars,
+        estimated_tokens,
+    )
+
+
 setup_logging()

@@ -1,13 +1,17 @@
+import asyncio
 import logging
+import time
+from pathlib import Path
 
 from agents.clarification_agent import get_clarification_questions
 from agents.document_agent import parse_report
 from agents.explanation_agent import generate_explanation
 from agents.knowledge_agent import retrieve_medical_knowledge
-from agents.logging_config import log_agent_input, log_agent_output
+from agents.logging_config import estimate_tokens, log_agent_input, log_agent_output, log_workflow_metrics
 from agents.models import MedBridgeResponse, PatientContext
 from agents.multilingual_agent import translate_explanation
 from agents.safety_agent import validate_response
+from config import MAX_CLARIFICATION_ROUNDS, WORKFLOW_TIMEOUT_SECONDS
 from orchestrator.checkpoint import (
     delete_session_checkpoint,
     load_session_checkpoint,
@@ -57,7 +61,9 @@ async def run_medbridge(
     report_bytes: bytes | None = None,
     report_filename: str = "",
 ) -> MedBridgeResponse:
+    started = time.perf_counter()
     trace = ReasoningTrace()
+    clarification_round = 0
 
     if session_id:
         checkpoint = load_session_checkpoint(session_id)
@@ -66,6 +72,7 @@ async def run_medbridge(
         report_text = checkpoint.report_text
         patient = checkpoint.patient
         trace = ReasoningTrace.from_list(checkpoint.trace)
+        clarification_round = checkpoint.clarification_round
         if clarification_answers:
             delete_session_checkpoint(session_id)
     else:
@@ -106,36 +113,52 @@ async def run_medbridge(
 
     questions = await get_clarification_questions(report, patient)
     if plan.needs_clarification and questions and not clarification_answers:
+        if clarification_round >= MAX_CLARIFICATION_ROUNDS:
+            trace.add(
+                "Clarification",
+                {
+                    "questions": questions,
+                    "skipped": True,
+                    "reason": "max_rounds_reached",
+                    "max_rounds": MAX_CLARIFICATION_ROUNDS,
+                },
+            )
+        else:
+            next_round = clarification_round + 1
+            trace.add(
+                "Clarification",
+                {"questions": questions, "skipped": False, "planner_triggered": True, "round": next_round},
+            )
+            sid = save_session_checkpoint(
+                report_text=report_text,
+                patient=patient,
+                trace=trace.to_list(),
+                clarification_questions=questions,
+                session_id=session_id,
+                clarification_round=next_round,
+            )
+            response = MedBridgeResponse(
+                explanation="",
+                clarification_needed=True,
+                clarification_questions=questions,
+                trace=trace.to_list(),
+                session_id=sid,
+            )
+            log_agent_output(
+                WORKFLOW_NAME,
+                clarification_needed=True,
+                clarification_questions=questions,
+                trace_steps=len(response.trace),
+                clarification_round=next_round,
+            )
+            _log_run_metrics(started, report_text, response)
+            return response
+
+    if not (plan.needs_clarification and questions and not clarification_answers):
         trace.add(
             "Clarification",
-            {"questions": questions, "skipped": False, "planner_triggered": True},
+            {"questions": questions, "skipped": True, "planner_triggered": plan.needs_clarification},
         )
-        sid = save_session_checkpoint(
-            report_text=report_text,
-            patient=patient,
-            trace=trace.to_list(),
-            clarification_questions=questions,
-            session_id=session_id,
-        )
-        response = MedBridgeResponse(
-            explanation="",
-            clarification_needed=True,
-            clarification_questions=questions,
-            trace=trace.to_list(),
-            session_id=sid,
-        )
-        log_agent_output(
-            WORKFLOW_NAME,
-            clarification_needed=True,
-            clarification_questions=questions,
-            trace_steps=len(response.trace),
-        )
-        return response
-
-    trace.add(
-        "Clarification",
-        {"questions": questions, "skipped": True, "planner_triggered": plan.needs_clarification},
-    )
 
     symptoms = _combined_symptoms(patient, clarification_answers)
     knowledge = await _retrieve_knowledge(plan.knowledge_queries, report.model_dump_json())
@@ -252,7 +275,20 @@ async def run_medbridge(
         citations=response.citations,
         trace_steps=len(response.trace),
     )
+    _log_run_metrics(started, report_text, response)
     return response
+
+
+def _log_run_metrics(started: float, report_text: str, response: MedBridgeResponse) -> None:
+    trace_text = " ".join(str(step.get("output", "")) for step in response.trace)
+    log_workflow_metrics(
+        WORKFLOW_NAME,
+        duration_seconds=time.perf_counter() - started,
+        trace_steps=len(response.trace),
+        report_chars=len(report_text),
+        explanation_chars=len(response.explanation),
+        estimated_tokens=estimate_tokens(report_text, trace_text, response.explanation),
+    )
 
 
 async def run_medbridge_safe(
@@ -263,15 +299,39 @@ async def run_medbridge_safe(
     report_bytes: bytes | None = None,
     report_filename: str = "",
 ) -> MedBridgeResponse:
-    """Step 198 — catch workflow failures and return a user-safe MedBridgeResponse."""
+    """Step 198/201 — catch workflow failures and enforce total timeout."""
     try:
-        return await run_medbridge(
-            report_text,
-            patient,
-            clarification_answers=clarification_answers,
-            session_id=session_id,
-            report_bytes=report_bytes,
-            report_filename=report_filename,
+        return await asyncio.wait_for(
+            run_medbridge(
+                report_text,
+                patient,
+                clarification_answers=clarification_answers,
+                session_id=session_id,
+                report_bytes=report_bytes,
+                report_filename=report_filename,
+            ),
+            timeout=WORKFLOW_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError as exc:
+        logger.exception("%s | workflow timed out after %ss", WORKFLOW_NAME, WORKFLOW_TIMEOUT_SECONDS)
+        message = friendly_error_message(exc)
+        trace = ReasoningTrace()
+        trace.add(
+            "Error",
+            {
+                "error_type": "TimeoutError",
+                "detail": f"Exceeded {WORKFLOW_TIMEOUT_SECONDS}s workflow limit",
+                "message": message,
+            },
+        )
+        return MedBridgeResponse(
+            explanation="",
+            clarification_needed=False,
+            safety_passed=False,
+            safety_notes=[message],
+            trace=trace.to_list(),
+            error=True,
+            error_message=message,
         )
     except Exception as exc:
         logger.exception("%s | workflow failed", WORKFLOW_NAME)
@@ -294,3 +354,48 @@ async def run_medbridge_safe(
             error=True,
             error_message=message,
         )
+
+
+async def _cli_demo() -> None:
+    """Step 208/209 — quick CLI smoke test for orchestrator.workflow."""
+    import sys
+
+    from dotenv import load_dotenv
+
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+
+    load_dotenv()
+
+    root = Path(__file__).resolve().parent.parent
+    report_path = root / "data" / "synthetic_reports" / "rpt_ent_001.txt"
+    report = report_path.read_text(encoding="utf-8")
+    patient = PatientContext(
+        symptoms="Mere kaan mein 3 din se ras aa rahi hai. Yeh report samjhao.",
+        language="Hindi",
+        literacy_level="simple",
+        audience="patient",
+    )
+
+    print("=== MedBridge workflow CLI (Step 209) ===")
+    print(f"Report: {report_path.name}")
+    round1 = await run_medbridge_safe(report, patient)
+    print("Clarification needed:", round1.clarification_needed)
+    if round1.clarification_questions:
+        print("Questions:", round1.clarification_questions)
+
+    if round1.clarification_needed and round1.session_id:
+        round2 = await run_medbridge_safe(
+            "",
+            patient,
+            clarification_answers=["Haan, halka bukhar hai. Kaan mein dard bhi hai."],
+            session_id=round1.session_id,
+        )
+        print("\nExplanation preview:")
+        print(round2.explanation[:400], "...")
+        print("Safety passed:", round2.safety_passed)
+        print("Trace steps:", len(round2.trace))
+
+
+if __name__ == "__main__":
+    asyncio.run(_cli_demo())
