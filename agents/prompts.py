@@ -46,6 +46,11 @@ Literacy modes:
 
 Always use a warm, supportive tone. Never diagnose or prescribe.
 Use anatomically correct terms (middle ear, not temple/forehead).
+
+OUTPUT LANGUAGE:
+- Always write the explanation in English only.
+- The patient may describe symptoms in Hindi, Spanish, Arabic, or other languages — understand them, but respond in English.
+- Translation to the patient's target language is handled by a separate agent later.
 """
 
 MULTILINGUAL_AGENT_INSTRUCTIONS = """

@@ -19,6 +19,8 @@ from agents.utils import is_vague_symptom_message
 from orchestrator.workflow import run_medbridge_safe
 from ui.clarification_ui import format_question, render_clarification_inputs
 from ui.demo_presets import SELECT_PLACEHOLDER, get_demo_preset, list_demo_labels, load_demo_report_text
+from ui.grandmother_mode import apply_grandmother_mode
+from ui.citation_format import format_citations_for_display, strip_citations_from_text
 from ui.safety_indicator import render_safety_indicator
 from ui.trace_panel import render_reasoning_trace
 
@@ -128,10 +130,11 @@ def render_result(result) -> None:
     render_safety_indicator(result.safety_passed, result.safety_notes)
 
     st.markdown("### 💬 Your explanation")
-    st.write(result.explanation)
+    st.write(strip_citations_from_text(result.explanation))
 
-    if result.citations:
-        st.caption("Sources: " + ", ".join(result.citations))
+    formatted_sources = format_citations_for_display(result.citations)
+    if formatted_sources:
+        st.caption("Sources: " + " · ".join(formatted_sources))
 
 
 st.set_page_config(page_title="MedBridge AI", page_icon="🏥", layout="wide")
@@ -178,6 +181,17 @@ literacy = st.sidebar.selectbox(
     "Literacy Level",
     ["simple", "standard"],
     key="ui_literacy",
+)
+
+st.sidebar.divider()
+if st.sidebar.button("👵 Explain to my grandmother", use_container_width=True, type="secondary"):
+    mode = apply_grandmother_mode(st.session_state.get("demo_symptoms", ""))
+    st.session_state.ui_audience = mode["audience"]
+    st.session_state.ui_literacy = mode["literacy_level"]
+    st.session_state.demo_symptoms = mode["symptoms"]
+    st.rerun()
+st.sidebar.caption(
+    "Family mode: warm, simple tone for explaining to an elderly relative."
 )
 
 default_report = st.session_state.get("demo_report_text", "")

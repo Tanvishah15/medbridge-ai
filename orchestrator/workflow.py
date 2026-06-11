@@ -176,6 +176,7 @@ async def run_medbridge(
         knowledge=knowledge["answer"],
         symptoms=symptoms,
         literacy_level=patient.literacy_level,
+        output_language="English",
     )
     trace.add("PatientExplanation", explanation)
 
@@ -218,6 +219,7 @@ async def run_medbridge(
             knowledge=knowledge["answer"],
             symptoms=symptoms,
             literacy_level=patient.literacy_level,
+            output_language="English",
         )
         trace.add("PatientExplanationRetry", explanation)
 

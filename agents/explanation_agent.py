@@ -19,6 +19,7 @@ async def generate_explanation(
     knowledge: str,
     symptoms: str,
     literacy_level: str = "simple",
+    output_language: str = "English",
 ) -> str:
     agent_name = "PatientExplanationAgent"
     log_agent_input(
@@ -46,9 +47,11 @@ async def generate_explanation(
     Grounded knowledge: {knowledge}
     Patient symptoms: {symptoms}
     Literacy level: {literacy_level}
+    Output language: {output_language}
     {_literacy_guidance(literacy_level)}
     {vague_note}
-    Write a clear, empathetic explanation. Connect symptoms to report findings when possible.
+    Write a clear, empathetic explanation in {output_language} only.
+    Connect symptoms to report findings when possible.
     Lead with what the report shows. Do not diagnose or prescribe.
     """
     result = await run_agent(agent, prompt)
