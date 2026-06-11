@@ -51,6 +51,12 @@ def _on_grandmother_click() -> None:
     st.session_state.ui_literacy = mode["literacy_level"]
     st.session_state.demo_symptoms = mode["symptoms"]
     st.session_state.symptoms_input = mode["symptoms"]
+    st.session_state.last_result = None
+    st.session_state.last_trace = []
+    st.session_state.pending_clarification = False
+    st.session_state.medbridge_session_id = None
+    st.session_state.clarification_questions = []
+    st.session_state._grandmother_applied = True
 
 
 def apply_medbridge_branding() -> None:
@@ -159,6 +165,9 @@ apply_medbridge_branding()
 apply_responsive_styles()
 render_disclaimer_banner()
 render_header()
+
+if st.session_state.pop("_grandmother_applied", False):
+    st.info("👵 Family mode on — click **Understand My Report** for a warm grandmother-friendly explanation.")
 
 st.sidebar.header("Settings")
 

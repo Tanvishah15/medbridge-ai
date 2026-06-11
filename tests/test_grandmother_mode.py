@@ -9,6 +9,11 @@ def test_apply_grandmother_mode_sets_family_and_simple():
     assert "She is worried about the sugar numbers." in mode["symptoms"]
 
 
+def test_apply_grandmother_mode_adds_space_after_punctuation():
+    mode = apply_grandmother_mode("Yeh report samjhao.")
+    assert mode["symptoms"] == f"Yeh report samjhao. {GRANDMOTHER_SUFFIX}"
+
+
 def test_apply_grandmother_mode_does_not_duplicate_grandmother_phrase():
     original = "Explain this blood test to my grandmother in Spanish."
     mode = apply_grandmother_mode(original)

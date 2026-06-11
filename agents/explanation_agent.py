@@ -14,12 +14,23 @@ def _literacy_guidance(literacy_level: str) -> str:
     return "Use simple literacy: very short sentences and everyday words only."
 
 
+def _audience_guidance(audience: str) -> str:
+    if audience.lower() == "family":
+        return (
+            "Audience is FAMILY — explain as if helping an elderly grandmother understand. "
+            "Use warm, simple, reassuring language with everyday analogies. "
+            "Shorter sentences than usual. Gentle and encouraging tone."
+        )
+    return "Audience is the patient — speak directly to them about their report."
+
+
 async def generate_explanation(
     report_summary: str,
     knowledge: str,
     symptoms: str,
     literacy_level: str = "simple",
     output_language: str = "English",
+    audience: str = "patient",
 ) -> str:
     agent_name = "PatientExplanationAgent"
     log_agent_input(
@@ -28,6 +39,7 @@ async def generate_explanation(
         knowledge=knowledge,
         symptoms=symptoms,
         literacy_level=literacy_level,
+        audience=audience,
     )
     client = get_chat_client()
     agent = client.as_agent(
@@ -47,8 +59,10 @@ async def generate_explanation(
     Grounded knowledge: {knowledge}
     Patient symptoms: {symptoms}
     Literacy level: {literacy_level}
+    Audience: {audience}
     Output language: {output_language}
     {_literacy_guidance(literacy_level)}
+    {_audience_guidance(audience)}
     {vague_note}
     Write a clear, empathetic explanation in {output_language} only.
     Use report-based phrasing only — never "you have [diagnosis]".

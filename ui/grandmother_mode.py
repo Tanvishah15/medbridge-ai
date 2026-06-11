@@ -8,7 +8,11 @@ def apply_grandmother_mode(current_symptoms: str = "") -> dict[str, str]:
     symptoms = current_symptoms.strip()
     lower = symptoms.lower()
     if "grandmother" not in lower and "grandma" not in lower and "dadi" not in lower:
-        symptoms = f"{symptoms}\n{GRANDMOTHER_SUFFIX}".strip() if symptoms else GRANDMOTHER_SUFFIX
+        if symptoms:
+            separator = " " if symptoms.endswith((".", "!", "?")) else ". "
+            symptoms = f"{symptoms.rstrip()}{separator}{GRANDMOTHER_SUFFIX}"
+        else:
+            symptoms = GRANDMOTHER_SUFFIX
 
     return {
         "audience": "family",
