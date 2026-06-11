@@ -12,7 +12,10 @@ import asyncio
 import streamlit as st
 from dotenv import load_dotenv
 
+from config import azure_cloud_credentials_configured, azure_configured, bootstrap_environment
+
 load_dotenv()
+bootstrap_environment()
 
 from agents.models import PatientContext
 from agents.utils import is_vague_symptom_message
@@ -169,6 +172,17 @@ render_header()
 
 if st.session_state.pop("_grandmother_applied", False):
     st.info("👵 Family mode on — click **Understand My Report** for a warm grandmother-friendly explanation.")
+
+if not azure_configured():
+    st.error(
+        "Azure is not configured. Add **AZURE_AI_PROJECT_ENDPOINT** (and other keys) in "
+        "Streamlit Cloud → Manage app → Settings → Secrets. See `.streamlit/secrets.toml.example`."
+    )
+elif not azure_cloud_credentials_configured():
+    st.warning(
+        "For Streamlit Cloud, also add **AZURE_TENANT_ID**, **AZURE_CLIENT_ID**, and "
+        "**AZURE_CLIENT_SECRET** in Secrets (service principal). Local `az login` does not work in the cloud."
+    )
 
 st.sidebar.header("Settings")
 
