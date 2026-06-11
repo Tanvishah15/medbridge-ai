@@ -1,7 +1,14 @@
-"""Streamlit UI for MedBridge AI — includes reasoning trace for judges (Step 189)."""
+"""Streamlit UI for MedBridge AI — Steps 212+ (Phase 7)."""
+
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import asyncio
-from pathlib import Path
+import ast
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -11,7 +18,6 @@ load_dotenv()
 from agents.models import PatientContext
 from orchestrator.workflow import run_medbridge_safe
 
-ROOT = Path(__file__).resolve().parent.parent
 DEMO_REPORTS = {
     "— Select demo report —": None,
     "ENT — Otitis Media (rpt_ent_001)": ROOT / "data" / "synthetic_reports" / "rpt_ent_001.txt",
@@ -42,6 +48,18 @@ def _load_demo_report(name: str) -> str:
     return ""
 
 
+def _format_question(question: str) -> str:
+    text = str(question).strip()
+    if text.startswith("{'question':") or text.startswith('{"question":'):
+        try:
+            parsed = ast.literal_eval(text)
+            if isinstance(parsed, dict) and "question" in parsed:
+                return str(parsed["question"])
+        except (SyntaxError, ValueError):
+            pass
+    return text
+
+
 def render_reasoning_trace(trace: list[dict]) -> None:
     """Step 189 — visible multi-step reasoning for judges."""
     st.markdown("### 🧠 How MedBridge agents reasoned")
@@ -69,7 +87,7 @@ def render_result(result) -> None:
     if result.clarification_needed:
         st.warning("I need a bit more information before explaining:")
         for question in result.clarification_questions:
-            st.write(f"• {question}")
+            st.write(f"• {_format_question(question)}")
         if result.session_id:
             st.caption(f"Session checkpoint: `{result.session_id}`")
         return
@@ -120,26 +138,40 @@ if "pending_clarification" not in st.session_state:
     st.session_state.pending_clarification = False
 if "medbridge_session_id" not in st.session_state:
     st.session_state.medbridge_session_id = None
+if "clarification_questions" not in st.session_state:
+    st.session_state.clarification_questions = []
 if "last_trace" not in st.session_state:
     st.session_state.last_trace = []
+if "last_result" not in st.session_state:
+    st.session_state.last_result = None
 
-clarification_answers = None
+clarification_answers = ""
 if st.session_state.pending_clarification:
-    st.markdown("#### Clarification answers")
+    st.divider()
+    st.markdown("### ❓ Clarification needed")
+    st.caption("Answer below, then click **Understand My Report** again.")
+    for question in st.session_state.clarification_questions:
+        st.write(f"• {_format_question(question)}")
     clarification_answers = st.text_area(
-        "Answer the questions above (one per line)",
-        height=100,
+        "Your answers (one per line)",
+        height=120,
         key="clarification_answers_input",
+        placeholder="Haan, halka bukhar hai.\nKaam mein dard hai.",
     )
 
 col1, col2 = st.columns(2)
-run_clicked = col1.button("Understand My Report", type="primary")
+run_clicked = col1.button(
+    "Submit answers & explain" if st.session_state.pending_clarification else "Understand My Report",
+    type="primary",
+)
 clear_clicked = col2.button("Clear session")
 
 if clear_clicked:
     st.session_state.pending_clarification = False
     st.session_state.medbridge_session_id = None
+    st.session_state.clarification_questions = []
     st.session_state.last_trace = []
+    st.session_state.last_result = None
     st.session_state.pop("demo_report_text", None)
     st.rerun()
 
@@ -149,9 +181,11 @@ if run_clicked:
         st.error("Please paste or upload a synthetic demo report.")
     elif not symptoms.strip():
         st.error("Please describe your symptoms or question.")
+    elif st.session_state.pending_clarification and not clarification_answers.strip():
+        st.error("Please answer the clarification questions above (one answer per line).")
     else:
         answers_list = None
-        if st.session_state.pending_clarification and clarification_answers:
+        if st.session_state.pending_clarification and clarification_answers.strip():
             answers_list = [line.strip() for line in clarification_answers.splitlines() if line.strip()]
 
         report_bytes = uploaded.getvalue() if uploaded is not None else None
@@ -178,9 +212,19 @@ if run_clicked:
 
         st.session_state.last_trace = result.trace
         st.session_state.pending_clarification = result.clarification_needed
-        st.session_state.medbridge_session_id = result.session_id
+        st.session_state.medbridge_session_id = result.session_id if result.clarification_needed else None
+        st.session_state.clarification_questions = (
+            result.clarification_questions if result.clarification_needed else []
+        )
+        if result.clarification_needed:
+            st.session_state.last_result = None
+            st.rerun()
+        else:
+            st.session_state.last_result = result
 
-        render_result(result)
+if st.session_state.last_result and not st.session_state.pending_clarification:
+    st.divider()
+    render_result(st.session_state.last_result)
 
 if st.session_state.last_trace:
     st.divider()
