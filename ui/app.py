@@ -21,6 +21,7 @@ from ui.clarification_ui import format_question, render_clarification_inputs
 from ui.demo_presets import SELECT_PLACEHOLDER, get_demo_preset, list_demo_labels, load_demo_report_text
 from ui.grandmother_mode import apply_grandmother_mode
 from ui.citation_format import format_citations_for_display, strip_citations_from_text
+from ui.disclaimer_banner import render_disclaimer_banner
 from ui.safety_indicator import render_safety_indicator
 from ui.trace_panel import render_reasoning_trace
 
@@ -140,11 +141,8 @@ def render_result(result) -> None:
 st.set_page_config(page_title="MedBridge AI", page_icon="🏥", layout="wide")
 
 apply_medbridge_branding()
+render_disclaimer_banner()
 render_header()
-st.warning(
-    "Demo only · Synthetic data · Not medical advice · Always consult your doctor.",
-    icon="⚠️",
-)
 
 st.sidebar.header("Settings")
 
