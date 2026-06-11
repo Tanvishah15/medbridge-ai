@@ -1,0 +1,10 @@
+# Step 214 — clean medical blue theme (no heavy gradients)
+[theme]
+primaryColor = "#2563eb"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f8fafc"
+textColor = "#1e293b"
+font = "sans serif"
+
+[server]
+headless = true

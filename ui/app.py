@@ -17,13 +17,7 @@ load_dotenv()
 
 from agents.models import PatientContext
 from orchestrator.workflow import run_medbridge_safe
-
-DEMO_REPORTS = {
-    "— Select demo report —": None,
-    "ENT — Otitis Media (rpt_ent_001)": ROOT / "data" / "synthetic_reports" / "rpt_ent_001.txt",
-    "Blood — Diabetes (rpt_blood_001)": ROOT / "data" / "synthetic_reports" / "rpt_blood_001.txt",
-    "MRI — Brain (rpt_mri_001)": ROOT / "data" / "synthetic_reports" / "rpt_mri_001.txt",
-}
+from ui.demo_presets import SELECT_PLACEHOLDER, get_demo_preset, list_demo_labels, load_demo_report_text
 
 AGENT_ICONS = {
     "Planner": "🗺️",
@@ -41,11 +35,16 @@ AGENT_ICONS = {
 }
 
 
-def _load_demo_report(name: str) -> str:
-    path = DEMO_REPORTS.get(name)
-    if path and path.exists():
-        return path.read_text(encoding="utf-8")
-    return ""
+def _apply_demo_preset(label: str) -> None:
+    """Step 215 — pre-load report, symptoms, and settings for a demo."""
+    preset = get_demo_preset(label)
+    if preset is None:
+        return
+    st.session_state.demo_report_text = load_demo_report_text(label)
+    st.session_state.demo_symptoms = preset.symptoms
+    st.session_state.ui_language = preset.language
+    st.session_state.ui_audience = preset.audience
+    st.session_state.ui_literacy = preset.literacy_level
 
 
 def _format_question(question: str) -> str:
@@ -58,6 +57,83 @@ def _format_question(question: str) -> str:
         except (SyntaxError, ValueError):
             pass
     return text
+
+
+def apply_medbridge_branding() -> None:
+    """Step 214 — clean medical blue styling."""
+    st.markdown(
+        """
+        <style>
+        .medbridge-hero {
+            background: #ffffff;
+            padding: 1.5rem 1.75rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            border-left: 5px solid #2563eb;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        }
+        .medbridge-hero h1 {
+            color: #0f172a !important;
+            font-size: 1.85rem !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            letter-spacing: -0.02em;
+        }
+        .medbridge-hero p {
+            color: #475569;
+            margin: 0.4rem 0 0.75rem 0;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        .medbridge-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+        .medbridge-badge {
+            display: inline-block;
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            border: 1px solid #bfdbfe;
+        }
+        div[data-testid="stSidebar"] {
+            background-color: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+        }
+        div[data-testid="stSidebar"] h2 {
+            color: #1e293b;
+            font-size: 1.1rem;
+        }
+        div[data-testid="stSidebar"] label {
+            color: #334155;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_header() -> None:
+    st.markdown(
+        """
+        <div class="medbridge-hero">
+            <h1>🏥 MedBridge AI</h1>
+            <p>Don't just translate my medical report. Help me understand what's happening to me.</p>
+            <div class="medbridge-badges">
+                <span class="medbridge-badge">6 reasoning agents</span>
+                <span class="medbridge-badge">Foundry IQ</span>
+                <span class="medbridge-badge">Synthetic demo</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_reasoning_trace(trace: list[dict]) -> None:
@@ -97,7 +173,7 @@ def render_result(result) -> None:
     else:
         st.error("⚠️ Response adjusted for safety")
 
-    st.markdown("### Your explanation")
+    st.markdown("### 💬 Your explanation")
     st.write(result.explanation)
 
     if result.citations:
@@ -109,21 +185,49 @@ def render_result(result) -> None:
 
 st.set_page_config(page_title="MedBridge AI", page_icon="🏥", layout="wide")
 
-st.title("MedBridge AI")
-st.caption("Don't just translate my medical report. Help me understand what's happening to me.")
+apply_medbridge_branding()
+render_header()
 st.warning(
     "Demo only · Synthetic data · Not medical advice · Always consult your doctor.",
     icon="⚠️",
 )
 
 st.sidebar.header("Settings")
-language = st.sidebar.selectbox("Language", ["English", "Hindi", "Spanish", "Arabic"])
-audience = st.sidebar.selectbox("Audience", ["patient", "family"])
-literacy = st.sidebar.selectbox("Literacy Level", ["simple", "standard"])
 
-demo_choice = st.sidebar.selectbox("Load demo report", list(DEMO_REPORTS.keys()))
-if demo_choice != "— Select demo report —":
-    st.session_state["demo_report_text"] = _load_demo_report(demo_choice)
+if "ui_language" not in st.session_state:
+    st.session_state.ui_language = "English"
+if "ui_audience" not in st.session_state:
+    st.session_state.ui_audience = "patient"
+if "ui_literacy" not in st.session_state:
+    st.session_state.ui_literacy = "simple"
+if "demo_symptoms" not in st.session_state:
+    st.session_state.demo_symptoms = ""
+
+demo_choice = st.sidebar.selectbox("Load demo report", list_demo_labels(), key="demo_choice")
+if demo_choice != SELECT_PLACEHOLDER:
+    if st.session_state.get("_loaded_demo") != demo_choice:
+        _apply_demo_preset(demo_choice)
+        st.session_state._loaded_demo = demo_choice
+        st.rerun()
+    preset = get_demo_preset(demo_choice)
+    if preset:
+        st.sidebar.caption(preset.description)
+
+language = st.sidebar.selectbox(
+    "Language",
+    ["English", "Hindi", "Spanish", "Arabic"],
+    key="ui_language",
+)
+audience = st.sidebar.selectbox(
+    "Audience",
+    ["patient", "family"],
+    key="ui_audience",
+)
+literacy = st.sidebar.selectbox(
+    "Literacy Level",
+    ["simple", "standard"],
+    key="ui_literacy",
+)
 
 default_report = st.session_state.get("demo_report_text", "")
 report = st.text_area(
@@ -131,7 +235,11 @@ report = st.text_area(
     value=default_report,
     height=200,
 )
-symptoms = st.text_input("Describe your symptoms or question")
+symptoms = st.text_input(
+    "Describe your symptoms or question",
+    value=st.session_state.get("demo_symptoms", ""),
+    key="symptoms_input",
+)
 uploaded = st.file_uploader("Or upload a synthetic report (PDF or TXT)", type=["pdf", "txt"])
 
 if "pending_clarification" not in st.session_state:
@@ -173,6 +281,11 @@ if clear_clicked:
     st.session_state.last_trace = []
     st.session_state.last_result = None
     st.session_state.pop("demo_report_text", None)
+    st.session_state.pop("demo_symptoms", None)
+    st.session_state.pop("_loaded_demo", None)
+    st.session_state.ui_language = "English"
+    st.session_state.ui_audience = "patient"
+    st.session_state.ui_literacy = "simple"
     st.rerun()
 
 if run_clicked:
