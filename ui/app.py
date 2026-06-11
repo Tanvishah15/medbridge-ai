@@ -109,6 +109,7 @@ report = st.text_area(
     height=200,
 )
 symptoms = st.text_input("Describe your symptoms or question")
+uploaded = st.file_uploader("Or upload a synthetic report (PDF or TXT)", type=["pdf", "txt"])
 
 if "pending_clarification" not in st.session_state:
     st.session_state.pending_clarification = False
@@ -138,14 +139,19 @@ if clear_clicked:
     st.rerun()
 
 if run_clicked:
-    if not report.strip():
-        st.error("Please paste a synthetic demo report.")
+    has_report = bool(report.strip()) or uploaded is not None
+    if not has_report:
+        st.error("Please paste or upload a synthetic demo report.")
     elif not symptoms.strip():
         st.error("Please describe your symptoms or question.")
     else:
         answers_list = None
         if st.session_state.pending_clarification and clarification_answers:
             answers_list = [line.strip() for line in clarification_answers.splitlines() if line.strip()]
+
+        report_bytes = uploaded.getvalue() if uploaded is not None else None
+        report_filename = uploaded.name if uploaded is not None else ""
+        report_input = report if report.strip() else ""
 
         with st.spinner("MedBridge agents are reasoning..."):
             patient = PatientContext(
@@ -156,10 +162,12 @@ if run_clicked:
             )
             result = asyncio.run(
                 run_medbridge(
-                    report,
+                    report_input,
                     patient,
                     clarification_answers=answers_list,
                     session_id=st.session_state.medbridge_session_id if answers_list else None,
+                    report_bytes=report_bytes,
+                    report_filename=report_filename,
                 )
             )
 

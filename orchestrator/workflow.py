@@ -13,6 +13,7 @@ from orchestrator.checkpoint import (
     load_session_checkpoint,
     save_session_checkpoint,
 )
+from orchestrator.pdf_utils import resolve_report_text
 from orchestrator.planner import plan_workflow
 from orchestrator.reflection import needs_knowledge_retry, reflect_on_explanation
 from orchestrator.trace import ReasoningTrace
@@ -52,6 +53,8 @@ async def run_medbridge(
     patient: PatientContext,
     clarification_answers: list[str] | None = None,
     session_id: str | None = None,
+    report_bytes: bytes | None = None,
+    report_filename: str = "",
 ) -> MedBridgeResponse:
     trace = ReasoningTrace()
 
@@ -64,6 +67,12 @@ async def run_medbridge(
         trace = ReasoningTrace.from_list(checkpoint.trace)
         if clarification_answers:
             delete_session_checkpoint(session_id)
+    else:
+        report_text = resolve_report_text(
+            report_text=report_text,
+            report_bytes=report_bytes,
+            filename=report_filename,
+        )
 
     log_agent_input(
         WORKFLOW_NAME,
