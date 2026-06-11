@@ -18,21 +18,7 @@ from agents.models import PatientContext
 from orchestrator.workflow import run_medbridge_safe
 from ui.clarification_ui import format_question, render_clarification_inputs
 from ui.demo_presets import SELECT_PLACEHOLDER, get_demo_preset, list_demo_labels, load_demo_report_text
-
-AGENT_ICONS = {
-    "Planner": "🗺️",
-    "SelfReflection": "🔍",
-    "SelfReflectionRetry": "🔍",
-    "MedicalKnowledgeRetry": "📚",
-    "PatientExplanationRetry": "💬",
-    "DocumentIntelligence": "📄",
-    "Clarification": "❓",
-    "MedicalKnowledge": "📚",
-    "PatientExplanation": "💬",
-    "Multilingual": "🌐",
-    "Safety": "🛡️",
-    "Error": "⚠️",
-}
+from ui.trace_panel import render_reasoning_trace
 
 
 def _apply_demo_preset(label: str) -> None:
@@ -122,25 +108,6 @@ def render_header() -> None:
         """,
         unsafe_allow_html=True,
     )
-
-
-def render_reasoning_trace(trace: list[dict]) -> None:
-    """Step 189 — visible multi-step reasoning for judges."""
-    st.markdown("### 🧠 How MedBridge agents reasoned")
-    st.caption(
-        "Sequential: Planner → Document → Clarify → Knowledge → Explain → "
-        "Self-Reflection → Translate → Safety. "
-        "Alternative: HandoffBuilder mesh in orchestrator/handoff_workflow.py"
-    )
-
-    if not trace:
-        st.info("No trace available yet. Run the workflow to see agent steps.")
-        return
-
-    for step in trace:
-        icon = AGENT_ICONS.get(step.get("agent", ""), "🤖")
-        with st.expander(f"{icon} Step {step.get('step')} — {step.get('agent')}", expanded=True):
-            st.write(step.get("output", ""))
 
 
 def render_result(result) -> None:
