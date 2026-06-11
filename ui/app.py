@@ -8,7 +8,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import asyncio
-import ast
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -17,6 +16,7 @@ load_dotenv()
 
 from agents.models import PatientContext
 from orchestrator.workflow import run_medbridge_safe
+from ui.clarification_ui import format_question, render_clarification_inputs
 from ui.demo_presets import SELECT_PLACEHOLDER, get_demo_preset, list_demo_labels, load_demo_report_text
 
 AGENT_ICONS = {
@@ -45,18 +45,6 @@ def _apply_demo_preset(label: str) -> None:
     st.session_state.ui_language = preset.language
     st.session_state.ui_audience = preset.audience
     st.session_state.ui_literacy = preset.literacy_level
-
-
-def _format_question(question: str) -> str:
-    text = str(question).strip()
-    if text.startswith("{'question':") or text.startswith('{"question":'):
-        try:
-            parsed = ast.literal_eval(text)
-            if isinstance(parsed, dict) and "question" in parsed:
-                return str(parsed["question"])
-        except (SyntaxError, ValueError):
-            pass
-    return text
 
 
 def apply_medbridge_branding() -> None:
@@ -163,7 +151,7 @@ def render_result(result) -> None:
     if result.clarification_needed:
         st.warning("I need a bit more information before explaining:")
         for question in result.clarification_questions:
-            st.write(f"• {_format_question(question)}")
+            st.write(f"• {format_question(question)}")
         if result.session_id:
             st.caption(f"Session checkpoint: `{result.session_id}`")
         return
@@ -253,18 +241,10 @@ if "last_trace" not in st.session_state:
 if "last_result" not in st.session_state:
     st.session_state.last_result = None
 
-clarification_answers = ""
+clarification_answers_list: list[str] = []
 if st.session_state.pending_clarification:
-    st.divider()
-    st.markdown("### ❓ Clarification needed")
-    st.caption("Answer below, then click **Understand My Report** again.")
-    for question in st.session_state.clarification_questions:
-        st.write(f"• {_format_question(question)}")
-    clarification_answers = st.text_area(
-        "Your answers (one per line)",
-        height=120,
-        key="clarification_answers_input",
-        placeholder="Haan, halka bukhar hai.\nKaam mein dard hai.",
+    clarification_answers_list = render_clarification_inputs(
+        st.session_state.clarification_questions
     )
 
 col1, col2 = st.columns(2)
@@ -278,6 +258,9 @@ if clear_clicked:
     st.session_state.pending_clarification = False
     st.session_state.medbridge_session_id = None
     st.session_state.clarification_questions = []
+    for key in list(st.session_state.keys()):
+        if str(key).startswith("clarification_answer_"):
+            del st.session_state[key]
     st.session_state.last_trace = []
     st.session_state.last_result = None
     st.session_state.pop("demo_report_text", None)
@@ -294,12 +277,12 @@ if run_clicked:
         st.error("Please paste or upload a synthetic demo report.")
     elif not symptoms.strip():
         st.error("Please describe your symptoms or question.")
-    elif st.session_state.pending_clarification and not clarification_answers.strip():
-        st.error("Please answer the clarification questions above (one answer per line).")
+    elif st.session_state.pending_clarification and not clarification_answers_list:
+        st.error("Please answer at least one clarification question above.")
     else:
         answers_list = None
-        if st.session_state.pending_clarification and clarification_answers.strip():
-            answers_list = [line.strip() for line in clarification_answers.splitlines() if line.strip()]
+        if st.session_state.pending_clarification and clarification_answers_list:
+            answers_list = clarification_answers_list
 
         report_bytes = uploaded.getvalue() if uploaded is not None else None
         report_filename = uploaded.name if uploaded is not None else ""
