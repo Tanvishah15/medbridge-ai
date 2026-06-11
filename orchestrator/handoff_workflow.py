@@ -17,6 +17,7 @@ from agents.prompts import (
     MULTILINGUAL_AGENT_INSTRUCTIONS,
     SAFETY_AGENT_INSTRUCTIONS,
 )
+from orchestrator.checkpoint import get_handoff_checkpoint_storage
 from config import AZURE_SEARCH_ENDPOINT, KNOWLEDGE_BASE_NAME, MCP_CONNECTION_NAME
 
 logger = logging.getLogger(__name__)
@@ -139,6 +140,7 @@ def build_medbridge_handoff_workflow(
         .add_handoff(knowledge, [explanation])
         .add_handoff(explanation, [multilingual, safety])
         .add_handoff(multilingual, [safety])
+        .with_checkpointing(get_handoff_checkpoint_storage())
         .build()
     )
     return workflow, agents

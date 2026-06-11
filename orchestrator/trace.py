@@ -20,3 +20,9 @@ class ReasoningTrace:
 
     def to_list(self) -> list[dict[str, Any]]:
         return list(self._steps)
+
+    @classmethod
+    def from_list(cls, steps: list[dict[str, Any]]) -> "ReasoningTrace":
+        trace = cls()
+        trace._steps = list(steps)
+        return trace

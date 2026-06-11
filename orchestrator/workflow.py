@@ -8,6 +8,11 @@ from agents.logging_config import log_agent_input, log_agent_output
 from agents.models import MedBridgeResponse, PatientContext
 from agents.multilingual_agent import translate_explanation
 from agents.safety_agent import validate_response
+from orchestrator.checkpoint import (
+    delete_session_checkpoint,
+    load_session_checkpoint,
+    save_session_checkpoint,
+)
 from orchestrator.planner import plan_workflow
 from orchestrator.reflection import needs_knowledge_retry, reflect_on_explanation
 from orchestrator.trace import ReasoningTrace
@@ -46,8 +51,19 @@ async def run_medbridge(
     report_text: str,
     patient: PatientContext,
     clarification_answers: list[str] | None = None,
+    session_id: str | None = None,
 ) -> MedBridgeResponse:
     trace = ReasoningTrace()
+
+    if session_id:
+        checkpoint = load_session_checkpoint(session_id)
+        if checkpoint is None:
+            raise ValueError(f"Session checkpoint not found: {session_id}")
+        report_text = checkpoint.report_text
+        patient = checkpoint.patient
+        trace = ReasoningTrace.from_list(checkpoint.trace)
+        if clarification_answers:
+            delete_session_checkpoint(session_id)
 
     log_agent_input(
         WORKFLOW_NAME,
@@ -84,11 +100,19 @@ async def run_medbridge(
             "Clarification",
             {"questions": questions, "skipped": False, "planner_triggered": True},
         )
+        sid = save_session_checkpoint(
+            report_text=report_text,
+            patient=patient,
+            trace=trace.to_list(),
+            clarification_questions=questions,
+            session_id=session_id,
+        )
         response = MedBridgeResponse(
             explanation="",
             clarification_needed=True,
             clarification_questions=questions,
             trace=trace.to_list(),
+            session_id=sid,
         )
         log_agent_output(
             WORKFLOW_NAME,

@@ -65,6 +65,8 @@ def render_result(result) -> None:
         st.warning("I need a bit more information before explaining:")
         for question in result.clarification_questions:
             st.write(f"• {question}")
+        if result.session_id:
+            st.caption(f"Session checkpoint: `{result.session_id}`")
         return
 
     if result.safety_passed:
@@ -110,6 +112,8 @@ symptoms = st.text_input("Describe your symptoms or question")
 
 if "pending_clarification" not in st.session_state:
     st.session_state.pending_clarification = False
+if "medbridge_session_id" not in st.session_state:
+    st.session_state.medbridge_session_id = None
 if "last_trace" not in st.session_state:
     st.session_state.last_trace = []
 
@@ -128,6 +132,7 @@ clear_clicked = col2.button("Clear session")
 
 if clear_clicked:
     st.session_state.pending_clarification = False
+    st.session_state.medbridge_session_id = None
     st.session_state.last_trace = []
     st.session_state.pop("demo_report_text", None)
     st.rerun()
@@ -149,10 +154,18 @@ if run_clicked:
                 literacy_level=literacy,
                 audience=audience,
             )
-            result = asyncio.run(run_medbridge(report, patient, clarification_answers=answers_list))
+            result = asyncio.run(
+                run_medbridge(
+                    report,
+                    patient,
+                    clarification_answers=answers_list,
+                    session_id=st.session_state.medbridge_session_id if answers_list else None,
+                )
+            )
 
         st.session_state.last_trace = result.trace
         st.session_state.pending_clarification = result.clarification_needed
+        st.session_state.medbridge_session_id = result.session_id
 
         render_result(result)
 
