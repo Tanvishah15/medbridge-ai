@@ -20,7 +20,8 @@ async def test_workflow_ent_returns_clarification_first(ent_report):
     assert result.explanation == ""
     assert len(result.trace) >= 2
     assert result.trace[0]["agent"] == "DocumentIntelligence"
-    assert result.trace[1]["agent"] == "Clarification"
+    assert result.trace[1]["agent"] == "Planner"
+    assert result.trace[2]["agent"] == "Clarification"
 
 
 @pytest.mark.asyncio
@@ -49,6 +50,7 @@ async def test_workflow_ent_hindi_full_explanation(ent_report):
     assert len(result.trace) >= 5
     agents = [step["agent"] for step in result.trace]
     assert agents[0] == "DocumentIntelligence"
+    assert "Planner" in agents
     assert "MedicalKnowledge" in agents
     assert "Multilingual" in agents
     assert "Safety" in agents

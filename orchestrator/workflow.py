@@ -8,6 +8,7 @@ from agents.logging_config import log_agent_input, log_agent_output
 from agents.models import MedBridgeResponse, PatientContext
 from agents.multilingual_agent import translate_explanation
 from agents.safety_agent import validate_response
+from orchestrator.planner import plan_workflow
 from orchestrator.trace import ReasoningTrace
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,24 @@ def _combined_symptoms(patient: PatientContext, clarification_answers: list[str]
         return patient.symptoms
     extra = " ".join(clarification_answers)
     return f"{patient.symptoms}\nAdditional clarification: {extra}".strip()
+
+
+async def _retrieve_knowledge(queries: list[str], report_context: str) -> dict:
+    if not queries:
+        return await retrieve_medical_knowledge("General medical context", report_context)
+
+    combined_answer: list[str] = []
+    all_citations: list[str] = []
+
+    for query in queries:
+        result = await retrieve_medical_knowledge(query, report_context)
+        combined_answer.append(result["answer"])
+        all_citations.extend(result.get("citations", []))
+
+    return {
+        "answer": "\n\n".join(combined_answer),
+        "citations": list(dict.fromkeys(all_citations)),
+    }
 
 
 async def run_medbridge(
@@ -47,13 +66,23 @@ async def run_medbridge(
         },
     )
 
-    questions = await get_clarification_questions(report, patient)
+    plan = await plan_workflow(report, patient, clarification_answers)
     trace.add(
-        "Clarification",
-        {"questions": questions, "skipped": not questions},
+        "Planner",
+        {
+            "needs_clarification": plan.needs_clarification,
+            "knowledge_queries": plan.knowledge_queries,
+            "use_multilingual": plan.use_multilingual,
+            "rationale": plan.rationale,
+        },
     )
 
-    if questions and not clarification_answers:
+    questions = await get_clarification_questions(report, patient)
+    if plan.needs_clarification and questions and not clarification_answers:
+        trace.add(
+            "Clarification",
+            {"questions": questions, "skipped": False, "planner_triggered": True},
+        )
         response = MedBridgeResponse(
             explanation="",
             clarification_needed=True,
@@ -68,13 +97,17 @@ async def run_medbridge(
         )
         return response
 
+    trace.add(
+        "Clarification",
+        {"questions": questions, "skipped": True, "planner_triggered": plan.needs_clarification},
+    )
+
     symptoms = _combined_symptoms(patient, clarification_answers)
-    query = f"{symptoms}. Report diagnosis: {report.diagnosis}"
-    knowledge = await retrieve_medical_knowledge(query, report.model_dump_json())
+    knowledge = await _retrieve_knowledge(plan.knowledge_queries, report.model_dump_json())
     trace.add(
         "MedicalKnowledge",
         {
-            "query": query,
+            "queries": plan.knowledge_queries,
             "answer": knowledge["answer"],
             "citations": knowledge.get("citations", []),
         },
@@ -88,7 +121,7 @@ async def run_medbridge(
     )
     trace.add("PatientExplanation", explanation)
 
-    if patient.language.lower() != "english":
+    if plan.use_multilingual:
         explanation = await translate_explanation(
             explanation,
             patient.language,

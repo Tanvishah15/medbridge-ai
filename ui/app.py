@@ -20,6 +20,7 @@ DEMO_REPORTS = {
 }
 
 AGENT_ICONS = {
+    "Planner": "🗺️",
     "DocumentIntelligence": "📄",
     "Clarification": "❓",
     "MedicalKnowledge": "📚",
@@ -39,7 +40,7 @@ def _load_demo_report(name: str) -> str:
 def render_reasoning_trace(trace: list[dict]) -> None:
     """Step 189 — visible multi-step reasoning for judges."""
     st.markdown("### 🧠 How MedBridge agents reasoned")
-    st.caption("Sequential pipeline: Document → Clarify → Knowledge → Explain → Translate → Safety")
+    st.caption("Sequential pipeline: Planner → Document → Clarify → Knowledge → Explain → Translate → Safety")
 
     if not trace:
         st.info("No trace available yet. Run the workflow to see agent steps.")
