@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 
 from agent_framework.foundry import FoundryChatClient
 from azure.identity import AzureCliCredential, ClientSecretCredential, DefaultAzureCredential
@@ -17,9 +16,10 @@ AGENT_MAX_RETRIES = 1
 
 def get_azure_credential():
     """Local dev: Azure CLI. Streamlit Cloud: service principal env vars."""
-    tenant_id = os.environ.get("AZURE_TENANT_ID", "").strip()
-    client_id = os.environ.get("AZURE_CLIENT_ID", "").strip()
-    client_secret = os.environ.get("AZURE_CLIENT_SECRET", "").strip()
+    config.bootstrap_environment()
+    tenant_id = config._get_secret("AZURE_TENANT_ID")
+    client_id = config._get_secret("AZURE_CLIENT_ID")
+    client_secret = config._get_secret("AZURE_CLIENT_SECRET")
     if tenant_id and client_id and client_secret:
         return ClientSecretCredential(
             tenant_id=tenant_id,

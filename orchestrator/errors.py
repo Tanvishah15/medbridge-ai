@@ -25,6 +25,19 @@ def friendly_error_message(exc: Exception) -> str:
             "Please try again with a shorter report."
         )
 
+    lower = str(exc).lower()
+    if "aadsts7000215" in lower or "invalid client secret" in lower:
+        return (
+            "Azure authentication failed: invalid client secret. "
+            "In Streamlit Secrets, paste the secret VALUE (not the Secret ID) "
+            "for AZURE_CLIENT_SECRET, then reboot the app."
+        )
+    if "authentication failed" in lower or "unauthorized" in lower:
+        return (
+            "Azure authentication failed on Streamlit Cloud. "
+            "Check AZURE_TENANT_ID, AZURE_CLIENT_ID, and AZURE_CLIENT_SECRET in Secrets."
+        )
+
     return (
         "Something went wrong while analyzing your report. "
         "Please try again, or use one of the demo reports. "
