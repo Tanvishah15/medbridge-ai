@@ -19,6 +19,7 @@ from agents.utils import is_vague_symptom_message
 from orchestrator.workflow import run_medbridge_safe
 from ui.clarification_ui import format_question, render_clarification_inputs
 from ui.demo_presets import SELECT_PLACEHOLDER, get_demo_preset, list_demo_labels, load_demo_report_text
+from ui.safety_indicator import render_safety_indicator
 from ui.trace_panel import render_reasoning_trace
 
 
@@ -124,19 +125,13 @@ def render_result(result) -> None:
             st.caption(f"Session checkpoint: `{result.session_id}`")
         return
 
-    if result.safety_passed:
-        st.success("✅ Safety validated")
-    else:
-        st.error("⚠️ Response adjusted for safety")
+    render_safety_indicator(result.safety_passed, result.safety_notes)
 
     st.markdown("### 💬 Your explanation")
     st.write(result.explanation)
 
     if result.citations:
         st.caption("Sources: " + ", ".join(result.citations))
-
-    if result.safety_notes:
-        st.caption("Safety notes: " + ", ".join(str(n) for n in result.safety_notes))
 
 
 st.set_page_config(page_title="MedBridge AI", page_icon="🏥", layout="wide")
