@@ -5,7 +5,7 @@ from typing import Any
 
 from agent_framework import Agent, Message
 from agent_framework.foundry import FoundryChatClient
-from agent_framework.orchestrations import HandoffBuilder
+from agent_framework.orchestrations import HandoffAgentUserRequest, HandoffBuilder
 
 from agents.base import get_chat_client
 from agents.models import MedBridgeResponse, PatientContext
@@ -119,8 +119,12 @@ def build_medbridge_handoff_workflow(
     def _terminated(conversation: list[Message]) -> bool:
         if not conversation:
             return False
-        last = conversation[-1]
-        return getattr(last, "author_name", "") == "safety_agent" and last.role == "assistant"
+        assistant_authors = [
+            getattr(message, "author_name", "")
+            for message in conversation
+            if message.role == "assistant"
+        ]
+        return "safety_agent" in assistant_authors or "explanation_agent" in assistant_authors
 
     workflow = (
         HandoffBuilder(
@@ -162,6 +166,52 @@ Route through: Document → Clarification → Knowledge → Explanation → Mult
 """
 
 
+def _collect_pending_requests(events: list[Any]) -> list[Any]:
+    return [
+        event
+        for event in events
+        if event.type == "request_info" and isinstance(event.data, HandoffAgentUserRequest)
+    ]
+
+
+def _update_conversation(events: list[Any], conversation: list[Message]) -> list[Message]:
+    for event in events:
+        if event.type == "output" and isinstance(event.data, list):
+            conversation = event.data
+    return conversation
+
+
+async def _run_handoff_loop(workflow, prompt: str) -> tuple[list[Any], list[Message]]:
+    events: list[Any] = []
+    conversation: list[Message] = []
+
+    stream = workflow.run(prompt, stream=True)
+    batch = [event async for event in stream]
+    events.extend(batch)
+    conversation = _update_conversation(batch, conversation)
+
+    pending = _collect_pending_requests(batch)
+    auto_replies = [
+        "Continue the MedBridge pipeline. Hand off to the next specialist agent.",
+        "Proceed with grounded knowledge retrieval and patient explanation, then safety review.",
+        "No further patient input. Complete explanation and safety validation.",
+    ]
+    reply_idx = 0
+
+    while pending and reply_idx < len(auto_replies):
+        reply = auto_replies[reply_idx]
+        reply_idx += 1
+        responses = {
+            req.request_id: HandoffAgentUserRequest.create_response(reply) for req in pending
+        }
+        batch = await workflow.run(responses=responses)
+        events.extend(batch)
+        conversation = _update_conversation(batch, conversation)
+        pending = _collect_pending_requests(batch)
+
+    return events, conversation
+
+
 def _events_to_trace(events: list[Any]) -> list[dict]:
     trace: list[dict] = []
     step = 0
@@ -181,9 +231,10 @@ def _events_to_trace(events: list[Any]) -> list[dict]:
 
 
 def _final_explanation(conversation: list[Message]) -> str:
-    for message in reversed(conversation):
-        if getattr(message, "author_name", "") == "safety_agent" and message.text:
-            return message.text
+    for name in ("safety_agent", "explanation_agent", "multilingual_agent"):
+        for message in reversed(conversation):
+            if getattr(message, "author_name", "") == name and message.text:
+                return message.text
     for message in reversed(conversation):
         if message.role == "assistant" and message.text:
             return message.text
@@ -198,13 +249,7 @@ async def run_medbridge_handoff(
     workflow, _agents = build_medbridge_handoff_workflow()
     prompt = _build_initial_message(report_text, patient, clarification_answers)
 
-    events: list[Any] = []
-    conversation: list[Message] = []
-
-    async for event in workflow.run(prompt, stream=True):
-        events.append(event)
-        if event.type == "output" and isinstance(event.data, list):
-            conversation = event.data
+    events, conversation = await _run_handoff_loop(workflow, prompt)
 
     handoff_trace = _events_to_trace(events)
     explanation = _final_explanation(conversation)
