@@ -9,6 +9,7 @@ from agents.models import MedBridgeResponse, PatientContext
 from agents.multilingual_agent import translate_explanation
 from agents.safety_agent import validate_response
 from orchestrator.planner import plan_workflow
+from orchestrator.reflection import needs_knowledge_retry, reflect_on_explanation
 from orchestrator.trace import ReasoningTrace
 
 logger = logging.getLogger(__name__)
@@ -120,6 +121,64 @@ async def run_medbridge(
         literacy_level=patient.literacy_level,
     )
     trace.add("PatientExplanation", explanation)
+
+    reflection = await reflect_on_explanation(
+        explanation,
+        knowledge["answer"],
+        symptoms,
+        report,
+        patient,
+    )
+    trace.add(
+        "SelfReflection",
+        {
+            "grounded": reflection.grounded,
+            "confidence": reflection.confidence,
+            "missing_topics": reflection.missing_topics,
+            "follow_up_query": reflection.follow_up_query,
+        },
+    )
+
+    if needs_knowledge_retry(reflection):
+        extra = await retrieve_medical_knowledge(
+            reflection.follow_up_query,
+            report.model_dump_json(),
+        )
+        knowledge["answer"] = f"{knowledge['answer']}\n\n{extra['answer']}".strip()
+        knowledge["citations"] = list(
+            dict.fromkeys(knowledge.get("citations", []) + extra.get("citations", []))
+        )
+        trace.add(
+            "MedicalKnowledgeRetry",
+            {
+                "query": reflection.follow_up_query,
+                "answer": extra["answer"],
+                "citations": extra.get("citations", []),
+            },
+        )
+        explanation = await generate_explanation(
+            report_summary=report.model_dump_json(),
+            knowledge=knowledge["answer"],
+            symptoms=symptoms,
+            literacy_level=patient.literacy_level,
+        )
+        trace.add("PatientExplanationRetry", explanation)
+
+        retry_reflection = await reflect_on_explanation(
+            explanation,
+            knowledge["answer"],
+            symptoms,
+            report,
+            patient,
+        )
+        trace.add(
+            "SelfReflectionRetry",
+            {
+                "grounded": retry_reflection.grounded,
+                "confidence": retry_reflection.confidence,
+                "missing_topics": retry_reflection.missing_topics,
+            },
+        )
 
     if plan.use_multilingual:
         explanation = await translate_explanation(

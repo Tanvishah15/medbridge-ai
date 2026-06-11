@@ -51,6 +51,7 @@ async def test_workflow_ent_hindi_full_explanation(ent_report):
     agents = [step["agent"] for step in result.trace]
     assert agents[0] == "DocumentIntelligence"
     assert "Planner" in agents
+    assert "SelfReflection" in agents
     assert "MedicalKnowledge" in agents
     assert "Multilingual" in agents
     assert "Safety" in agents
