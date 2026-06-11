@@ -2,6 +2,17 @@
 
 Multilingual Medical Reasoning & Patient Understanding Platform
 
+## Demo UI
+
+![MedBridge AI Streamlit home screen](docs/screenshots/streamlit-ui-home.png)
+
+Run locally:
+```powershell
+cd medbridge-ai
+.venv\Scripts\Activate.ps1
+streamlit run ui/app.py
+```
+
 ## Hackathon
 - Track: Reasoning Agents (Microsoft Foundry)
 - Event: Agents League Hackathon 2026
