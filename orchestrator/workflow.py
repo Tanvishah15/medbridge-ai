@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from agents.clarification_agent import get_clarification_questions
@@ -26,6 +27,13 @@ from orchestrator.trace import ReasoningTrace
 logger = logging.getLogger(__name__)
 
 WORKFLOW_NAME = "MedBridgeOrchestrator"
+
+ProgressCallback = Callable[[str], None]
+
+
+def _notify_progress(callback: ProgressCallback | None, step_key: str) -> None:
+    if callback is not None:
+        callback(step_key)
 
 
 def _combined_symptoms(patient: PatientContext, clarification_answers: list[str] | None) -> str:
@@ -60,6 +68,7 @@ async def run_medbridge(
     session_id: str | None = None,
     report_bytes: bytes | None = None,
     report_filename: str = "",
+    progress_callback: ProgressCallback | None = None,
 ) -> MedBridgeResponse:
     started = time.perf_counter()
     trace = ReasoningTrace()
@@ -82,6 +91,8 @@ async def run_medbridge(
             filename=report_filename,
         )
 
+    _notify_progress(progress_callback, "reading_report")
+
     log_agent_input(
         WORKFLOW_NAME,
         report_chars=len(report_text),
@@ -99,6 +110,8 @@ async def run_medbridge(
             "affected_area": report.affected_area,
         },
     )
+
+    _notify_progress(progress_callback, "checking_symptoms")
 
     plan = await plan_workflow(report, patient, clarification_answers)
     trace.add(
@@ -161,6 +174,7 @@ async def run_medbridge(
         )
 
     symptoms = _combined_symptoms(patient, clarification_answers)
+    _notify_progress(progress_callback, "retrieving_knowledge")
     knowledge = await _retrieve_knowledge(plan.knowledge_queries, report.model_dump_json())
     trace.add(
         "MedicalKnowledge",
@@ -171,6 +185,7 @@ async def run_medbridge(
         },
     )
 
+    _notify_progress(progress_callback, "explaining")
     explanation = await generate_explanation(
         report_summary=report.model_dump_json(),
         knowledge=knowledge["answer"],
@@ -241,6 +256,7 @@ async def run_medbridge(
             },
         )
 
+    _notify_progress(progress_callback, "validating_safety")
     if plan.use_multilingual:
         explanation = await translate_explanation(
             explanation,
@@ -302,6 +318,7 @@ async def run_medbridge_safe(
     session_id: str | None = None,
     report_bytes: bytes | None = None,
     report_filename: str = "",
+    progress_callback: ProgressCallback | None = None,
 ) -> MedBridgeResponse:
     """Step 198/201 — catch workflow failures and enforce total timeout."""
     try:
@@ -313,6 +330,7 @@ async def run_medbridge_safe(
                 session_id=session_id,
                 report_bytes=report_bytes,
                 report_filename=report_filename,
+                progress_callback=progress_callback,
             ),
             timeout=WORKFLOW_TIMEOUT_SECONDS,
         )

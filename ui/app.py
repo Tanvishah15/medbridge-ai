@@ -22,6 +22,7 @@ from ui.demo_presets import SELECT_PLACEHOLDER, get_demo_preset, list_demo_label
 from ui.grandmother_mode import apply_grandmother_mode
 from ui.citation_format import format_citations_for_display, strip_citations_from_text
 from ui.disclaimer_banner import render_disclaimer_banner
+from ui.loading_steps import LoadingStepTracker
 from ui.responsive_styles import apply_responsive_styles
 from ui.safety_indicator import render_safety_indicator
 from ui.trace_panel import render_reasoning_trace
@@ -294,7 +295,9 @@ if run_clicked:
         report_filename = uploaded.name if uploaded is not None else ""
         report_input = report if report.strip() else ""
 
-        with st.spinner("MedBridge agents are reasoning..."):
+        with st.status("MedBridge agents are reasoning...", expanded=True) as status:
+            timeline = st.empty()
+            progress = LoadingStepTracker(status, timeline)
             patient = PatientContext(
                 symptoms=symptoms,
                 language=language,
@@ -309,8 +312,10 @@ if run_clicked:
                     session_id=st.session_state.medbridge_session_id if answers_list else None,
                     report_bytes=report_bytes,
                     report_filename=report_filename,
+                    progress_callback=progress,
                 )
             )
+            status.update(label="Done!", state="complete")
 
         st.session_state.last_trace = result.trace
         st.session_state.pending_clarification = result.clarification_needed
