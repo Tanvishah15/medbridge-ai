@@ -45,8 +45,9 @@ def render_reasoning_trace(trace: list[dict]) -> None:
     """Step 189 — visible multi-step reasoning for judges."""
     st.markdown("### 🧠 How MedBridge agents reasoned")
     st.caption(
-        "Pipeline: Planner → Document → Clarify → Knowledge → Explain → "
-        "Self-Reflection → Translate → Safety"
+        "Sequential: Planner → Document → Clarify → Knowledge → Explain → "
+        "Self-Reflection → Translate → Safety. "
+        "Alternative: HandoffBuilder mesh in orchestrator/handoff_workflow.py"
     )
 
     if not trace:
