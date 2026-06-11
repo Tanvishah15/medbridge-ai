@@ -31,3 +31,5 @@ class MedBridgeResponse(BaseModel):
     safety_notes: list[str] = Field(default_factory=list)
     trace: list[dict] = Field(default_factory=list)
     session_id: str | None = None
+    error: bool = False
+    error_message: str = ""

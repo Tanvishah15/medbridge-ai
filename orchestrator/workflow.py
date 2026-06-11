@@ -13,6 +13,7 @@ from orchestrator.checkpoint import (
     load_session_checkpoint,
     save_session_checkpoint,
 )
+from orchestrator.errors import friendly_error_message
 from orchestrator.pdf_utils import resolve_report_text
 from orchestrator.planner import plan_workflow
 from orchestrator.reflection import needs_knowledge_retry, reflect_on_explanation
@@ -252,3 +253,44 @@ async def run_medbridge(
         trace_steps=len(response.trace),
     )
     return response
+
+
+async def run_medbridge_safe(
+    report_text: str,
+    patient: PatientContext,
+    clarification_answers: list[str] | None = None,
+    session_id: str | None = None,
+    report_bytes: bytes | None = None,
+    report_filename: str = "",
+) -> MedBridgeResponse:
+    """Step 198 — catch workflow failures and return a user-safe MedBridgeResponse."""
+    try:
+        return await run_medbridge(
+            report_text,
+            patient,
+            clarification_answers=clarification_answers,
+            session_id=session_id,
+            report_bytes=report_bytes,
+            report_filename=report_filename,
+        )
+    except Exception as exc:
+        logger.exception("%s | workflow failed", WORKFLOW_NAME)
+        message = friendly_error_message(exc)
+        trace = ReasoningTrace()
+        trace.add(
+            "Error",
+            {
+                "error_type": type(exc).__name__,
+                "detail": str(exc),
+                "message": message,
+            },
+        )
+        return MedBridgeResponse(
+            explanation="",
+            clarification_needed=False,
+            safety_passed=False,
+            safety_notes=[message],
+            trace=trace.to_list(),
+            error=True,
+            error_message=message,
+        )

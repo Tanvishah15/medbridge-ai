@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from agents.models import PatientContext
-from orchestrator.workflow import run_medbridge
+from orchestrator.workflow import run_medbridge_safe
 
 ROOT = Path(__file__).resolve().parent.parent
 DEMO_REPORTS = {
@@ -31,6 +31,7 @@ AGENT_ICONS = {
     "PatientExplanation": "💬",
     "Multilingual": "🌐",
     "Safety": "🛡️",
+    "Error": "⚠️",
 }
 
 
@@ -61,6 +62,10 @@ def render_reasoning_trace(trace: list[dict]) -> None:
 
 
 def render_result(result) -> None:
+    if result.error:
+        st.error(result.error_message or "Something went wrong. Please try again.")
+        return
+
     if result.clarification_needed:
         st.warning("I need a bit more information before explaining:")
         for question in result.clarification_questions:
@@ -161,7 +166,7 @@ if run_clicked:
                 audience=audience,
             )
             result = asyncio.run(
-                run_medbridge(
+                run_medbridge_safe(
                     report_input,
                     patient,
                     clarification_answers=answers_list,
