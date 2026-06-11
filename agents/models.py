@@ -29,3 +29,4 @@ class MedBridgeResponse(BaseModel):
     clarification_questions: list[str] = Field(default_factory=list)
     safety_passed: bool = True
     safety_notes: list[str] = Field(default_factory=list)
+    trace: list[dict] = Field(default_factory=list)

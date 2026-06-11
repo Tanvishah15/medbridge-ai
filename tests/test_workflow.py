@@ -18,6 +18,9 @@ async def test_workflow_ent_returns_clarification_first(ent_report):
     assert result.clarification_needed is True
     assert 1 <= len(result.clarification_questions) <= 3
     assert result.explanation == ""
+    assert len(result.trace) >= 2
+    assert result.trace[0]["agent"] == "DocumentIntelligence"
+    assert result.trace[1]["agent"] == "Clarification"
 
 
 @pytest.mark.asyncio
@@ -43,6 +46,12 @@ async def test_workflow_ent_hindi_full_explanation(ent_report):
     assert result.citations or "doctor" in result.explanation.lower()
     assert any("\u0900" <= ch <= "\u097f" for ch in result.explanation) or "kaan" in result.explanation.lower()
     assert result.safety_passed is True
+    assert len(result.trace) >= 5
+    agents = [step["agent"] for step in result.trace]
+    assert agents[0] == "DocumentIntelligence"
+    assert "MedicalKnowledge" in agents
+    assert "Multilingual" in agents
+    assert "Safety" in agents
 
 
 @pytest.mark.asyncio

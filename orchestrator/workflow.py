@@ -8,6 +8,7 @@ from agents.logging_config import log_agent_input, log_agent_output
 from agents.models import MedBridgeResponse, PatientContext
 from agents.multilingual_agent import translate_explanation
 from agents.safety_agent import validate_response
+from orchestrator.trace import ReasoningTrace
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,8 @@ async def run_medbridge(
     patient: PatientContext,
     clarification_answers: list[str] | None = None,
 ) -> MedBridgeResponse:
+    trace = ReasoningTrace()
+
     log_agent_input(
         WORKFLOW_NAME,
         report_chars=len(report_text),
@@ -35,24 +38,47 @@ async def run_medbridge(
     )
 
     report = await parse_report(report_text)
+    trace.add(
+        "DocumentIntelligence",
+        {
+            "diagnosis": report.diagnosis,
+            "findings": report.findings,
+            "affected_area": report.affected_area,
+        },
+    )
 
     questions = await get_clarification_questions(report, patient)
+    trace.add(
+        "Clarification",
+        {"questions": questions, "skipped": not questions},
+    )
+
     if questions and not clarification_answers:
         response = MedBridgeResponse(
             explanation="",
             clarification_needed=True,
             clarification_questions=questions,
+            trace=trace.to_list(),
         )
         log_agent_output(
             WORKFLOW_NAME,
             clarification_needed=True,
             clarification_questions=questions,
+            trace_steps=len(response.trace),
         )
         return response
 
     symptoms = _combined_symptoms(patient, clarification_answers)
     query = f"{symptoms}. Report diagnosis: {report.diagnosis}"
     knowledge = await retrieve_medical_knowledge(query, report.model_dump_json())
+    trace.add(
+        "MedicalKnowledge",
+        {
+            "query": query,
+            "answer": knowledge["answer"],
+            "citations": knowledge.get("citations", []),
+        },
+    )
 
     explanation = await generate_explanation(
         report_summary=report.model_dump_json(),
@@ -60,6 +86,7 @@ async def run_medbridge(
         symptoms=symptoms,
         literacy_level=patient.literacy_level,
     )
+    trace.add("PatientExplanation", explanation)
 
     if patient.language.lower() != "english":
         explanation = await translate_explanation(
@@ -67,9 +94,21 @@ async def run_medbridge(
             patient.language,
             patient.audience,
         )
+        trace.add(
+            "Multilingual",
+            {"language": patient.language, "audience": patient.audience, "text": explanation},
+        )
 
     safety = await validate_response(explanation)
     final = safety.get("revised_response", explanation)
+    trace.add(
+        "Safety",
+        {
+            "safe": safety.get("safe", True),
+            "issues": safety.get("issues", []),
+            "revised_response": final,
+        },
+    )
 
     response = MedBridgeResponse(
         explanation=final,
@@ -77,6 +116,7 @@ async def run_medbridge(
         clarification_needed=False,
         safety_passed=safety.get("safe", True),
         safety_notes=safety.get("issues", []),
+        trace=trace.to_list(),
     )
     log_agent_output(
         WORKFLOW_NAME,
@@ -84,5 +124,6 @@ async def run_medbridge(
         safety_passed=response.safety_passed,
         explanation=final,
         citations=response.citations,
+        trace_steps=len(response.trace),
     )
     return response
