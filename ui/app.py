@@ -34,9 +34,23 @@ def _apply_demo_preset(label: str) -> None:
         return
     st.session_state.demo_report_text = load_demo_report_text(label)
     st.session_state.demo_symptoms = preset.symptoms
+    st.session_state.symptoms_input = preset.symptoms
     st.session_state.ui_language = preset.language
     st.session_state.ui_audience = preset.audience
     st.session_state.ui_literacy = preset.literacy_level
+
+
+def _on_grandmother_click() -> None:
+    """Step 219 — apply family mode before sidebar widgets bind session keys."""
+    current = st.session_state.get(
+        "symptoms_input",
+        st.session_state.get("demo_symptoms", ""),
+    )
+    mode = apply_grandmother_mode(current)
+    st.session_state.ui_audience = mode["audience"]
+    st.session_state.ui_literacy = mode["literacy_level"]
+    st.session_state.demo_symptoms = mode["symptoms"]
+    st.session_state.symptoms_input = mode["symptoms"]
 
 
 def apply_medbridge_branding() -> None:
@@ -167,6 +181,17 @@ if demo_choice != SELECT_PLACEHOLDER:
     if preset:
         st.sidebar.caption(preset.description)
 
+st.sidebar.divider()
+st.sidebar.button(
+    "👵 Explain to my grandmother",
+    use_container_width=True,
+    type="secondary",
+    on_click=_on_grandmother_click,
+)
+st.sidebar.caption(
+    "Family mode: warm, simple tone for explaining to an elderly relative."
+)
+
 language = st.sidebar.selectbox(
     "Language",
     ["English", "Hindi", "Spanish", "Arabic"],
@@ -181,17 +206,6 @@ literacy = st.sidebar.selectbox(
     "Literacy Level",
     ["simple", "standard"],
     key="ui_literacy",
-)
-
-st.sidebar.divider()
-if st.sidebar.button("👵 Explain to my grandmother", use_container_width=True, type="secondary"):
-    mode = apply_grandmother_mode(st.session_state.get("demo_symptoms", ""))
-    st.session_state.ui_audience = mode["audience"]
-    st.session_state.ui_literacy = mode["literacy_level"]
-    st.session_state.demo_symptoms = mode["symptoms"]
-    st.rerun()
-st.sidebar.caption(
-    "Family mode: warm, simple tone for explaining to an elderly relative."
 )
 
 default_report = st.session_state.get("demo_report_text", "")
@@ -248,6 +262,7 @@ if clear_clicked:
     st.session_state.pop("demo_report_text", None)
     st.session_state.pop("demo_symptoms", None)
     st.session_state.pop("_loaded_demo", None)
+    st.session_state.pop("symptoms_input", None)
     st.session_state.ui_language = "English"
     st.session_state.ui_audience = "patient"
     st.session_state.ui_literacy = "simple"
