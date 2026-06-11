@@ -221,6 +221,7 @@ if run_clicked:
             st.rerun()
         else:
             st.session_state.last_result = result
+            st.rerun()
 
 if st.session_state.last_result and not st.session_state.pending_clarification:
     st.divider()
