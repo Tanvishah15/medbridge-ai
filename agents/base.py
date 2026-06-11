@@ -4,7 +4,8 @@ import os
 
 from agent_framework.foundry import FoundryChatClient
 from azure.identity import AzureCliCredential, ClientSecretCredential, DefaultAzureCredential
-from config import MODEL_DEPLOYMENT, MODEL_DEPLOYMENT_FAST, PROJECT_ENDPOINT
+
+import config
 
 from agents import logging_config  # noqa: F401
 
@@ -33,9 +34,11 @@ def get_azure_credential():
 
 
 def get_chat_client(fast: bool = False) -> FoundryChatClient:
-    model = MODEL_DEPLOYMENT_FAST if fast else MODEL_DEPLOYMENT
+    config.bootstrap_environment()
+    model = config.MODEL_DEPLOYMENT_FAST if fast else config.MODEL_DEPLOYMENT
+    endpoint = config.PROJECT_ENDPOINT
     return FoundryChatClient(
-        project_endpoint=PROJECT_ENDPOINT,
+        project_endpoint=endpoint,
         model=model,
         credential=get_azure_credential(),
     )
