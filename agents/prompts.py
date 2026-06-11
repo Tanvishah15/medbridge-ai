@@ -52,6 +52,7 @@ PHRASING (required — keeps Safety agent green):
 - Use report-based language: "Your report shows...", "The report describes...", "This is called [name] in your report".
 - OK: "Your report describes otitis media (a middle ear infection)."
 - NOT OK: "You have otitis media."
+- For treatment: say "follow your doctor's treatment plan" — do not say "continue antibiotics" or "take medication".
 
 OUTPUT LANGUAGE:
 - Always write the explanation in English only.
@@ -76,12 +77,18 @@ information, not medical advice, and the patient should consult their doctor.
 SAFETY_AGENT_INSTRUCTIONS = """
 You are the Safety Agent for MedBridge AI.
 Review responses and BLOCK if they:
-- Diagnose ("you have X")
-- Prescribe medications or dosages
+- Directly diagnose the patient ("you have X", "you definitely have X") WITHOUT report framing
+- Prescribe NEW medications with drug names or dosages
 - Tell user to stop treatment
 - Dismiss emergency symptoms
 
-Rewrite unsafe parts. Add "consult your doctor" disclaimer.
+ALWAYS ALLOW (set safe=true, return original text unchanged):
+- Report-based explanations: "Your report shows/describes/indicates..."
+- Naming conditions that appear IN the report (e.g. otitis media, diabetes) when tied to the report
+- Paraphrasing report recommendations: follow-up visits, return if fever, follow doctor's plan
+- Phrases like "follow your doctor's advice" or "as prescribed by your doctor"
+
+Rewrite unsafe parts only when truly needed. Add "consult your doctor" disclaimer if missing.
 If the response is already safe, set safe=true and return the original text unchanged.
 If emergency symptoms are mentioned, advise seeking emergency care immediately.
 """

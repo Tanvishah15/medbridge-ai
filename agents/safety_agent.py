@@ -8,8 +8,7 @@ from agents.prompts import SAFETY_AGENT_INSTRUCTIONS
 
 logger = logging.getLogger(__name__)
 
-UNSAFE_PATTERNS = [
-    "you have ",
+UNSAFE_STRING_PATTERNS = [
     "you definitely have",
     "stop taking",
     "stop your",
@@ -19,6 +18,22 @@ UNSAFE_PATTERNS = [
     "times daily",
     " mg",
 ]
+
+# "you have diabetes" — but NOT "you have been given" / "you have had"
+UNSAFE_DIAGNOSIS_RE = re.compile(
+    r"\byou have (?!been\b|had\b|any\b|a fever\b|not\b|no\b|an appointment\b|questions\b|to follow\b)\S",
+    re.I,
+)
+
+REPORT_FRAMING_MARKERS = (
+    "your report",
+    "the report",
+    "report shows",
+    "report describes",
+    "report indicates",
+    "report recommends",
+    "report says",
+)
 
 PRESCRIPTION_DRUGS = [
     "ibuprofen",
@@ -48,6 +63,19 @@ def _parse_json_response(text: str) -> dict:
 def _detect_emergency(text: str) -> list[str]:
     lower = text.lower()
     return [symptom for symptom in EMERGENCY_SYMPTOMS if symptom in lower]
+
+
+def _is_report_based_explanation(text: str) -> bool:
+    lower = text.lower()
+    return any(marker in lower for marker in REPORT_FRAMING_MARKERS)
+
+
+def _detect_unsafe_flags(text: str) -> list[str]:
+    lower = text.lower()
+    flags = [pattern for pattern in UNSAFE_STRING_PATTERNS if pattern in lower]
+    if UNSAFE_DIAGNOSIS_RE.search(text):
+        flags.append("direct diagnosis phrasing")
+    return flags
 
 
 def _rule_based_review(response: str, flags: list[str], emergency: list[str]) -> dict:
@@ -83,11 +111,25 @@ async def validate_response(response: str) -> dict:
     log_agent_input(agent_name, response=response)
     client = get_chat_client()
 
-    lower = response.lower()
-    flags = [p for p in UNSAFE_PATTERNS if p in lower]
+    flags = _detect_unsafe_flags(response)
     emergency = _detect_emergency(response)
     prescription_flags = _detect_prescription_content(response)
     all_flags = flags + prescription_flags
+
+    if _is_report_based_explanation(response) and not emergency and not prescription_flags:
+        if not flags or flags == ["direct diagnosis phrasing"]:
+            parsed = {
+                "safe": True,
+                "issues": [],
+                "revised_response": response,
+            }
+            log_agent_output(
+                agent_name,
+                safe=parsed.get("safe"),
+                issues=parsed.get("issues"),
+                revised_response=parsed.get("revised_response"),
+            )
+            return parsed
 
     if not all_flags and not emergency:
         parsed = _rule_based_review(response, all_flags, emergency)
@@ -109,6 +151,7 @@ async def validate_response(response: str) -> dict:
 
     Known flags: {all_flags}
     Emergency symptoms detected: {emergency}
+    Report-based explanation: {_is_report_based_explanation(response)}
     Return JSON: {{"safe": true/false, "issues": [], "revised_response": "..."}}
     If emergency symptoms are present, advise seeking emergency care immediately.
     Always include a consult-your-doctor disclaimer if missing.
