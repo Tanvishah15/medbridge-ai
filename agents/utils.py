@@ -72,6 +72,39 @@ FEVER_MARKERS = [
     "bina bukhar",
 ]
 
+BODY_PART_MARKERS = [
+    "ear",
+    "kaan",
+    "blood",
+    "glucose",
+    "sugar",
+    "mri",
+    "brain",
+    "heart",
+    "chest",
+    "diabetes",
+    "cholesterol",
+    "dard",
+    "pain",
+    "ras",
+    "discharge",
+]
+
+VAGUE_SYMPTOM_PHRASES = [
+    "not feeling well",
+    "dont feel well",
+    "don't feel well",
+    "feel nhi",
+    "acha feel nhi",
+    "accha feel nhi",
+    "theek nhi",
+    "explain my report",
+    "explain this report",
+    "yeh report",
+    "samjhao",
+    "help me understand",
+]
+
 
 def detect_ungrounded_drug_names(answer: str) -> list[str]:
     lower = answer.lower()
@@ -84,6 +117,18 @@ def symptoms_are_complete(symptoms: str) -> bool:
     has_pain = any(marker in lower for marker in PAIN_MARKERS)
     has_fever = any(marker in lower for marker in FEVER_MARKERS)
     return has_duration and has_pain and has_fever
+
+
+def is_vague_symptom_message(symptoms: str) -> bool:
+    lower = symptoms.lower().strip()
+    if not lower:
+        return True
+    has_body_part = any(marker in lower for marker in BODY_PART_MARKERS)
+    if has_body_part and len(lower) >= 20:
+        return False
+    if any(phrase in lower for phrase in VAGUE_SYMPTOM_PHRASES):
+        return not has_body_part
+    return len(lower) < 20 and not has_body_part
 
 
 def has_empathy_tone(text: str) -> bool:

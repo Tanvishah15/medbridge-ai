@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from agents.models import PatientContext
+from agents.utils import is_vague_symptom_message
 from orchestrator.workflow import run_medbridge_safe
 from ui.clarification_ui import format_question, render_clarification_inputs
 from ui.demo_presets import SELECT_PLACEHOLDER, get_demo_preset, list_demo_labels, load_demo_report_text
@@ -195,6 +196,11 @@ symptoms = st.text_input(
     value=st.session_state.get("demo_symptoms", ""),
     key="symptoms_input",
 )
+if symptoms.strip() and is_vague_symptom_message(symptoms):
+    st.caption(
+        "Tip: Add body-specific details (e.g. ear pain, discharge, fever) "
+        "or reload the demo preset for best results."
+    )
 uploaded = st.file_uploader("Or upload a synthetic report (PDF or TXT)", type=["pdf", "txt"])
 
 if "pending_clarification" not in st.session_state:

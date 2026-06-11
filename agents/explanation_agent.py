@@ -3,6 +3,7 @@ import logging
 from agents.base import get_chat_client, run_agent
 from agents.logging_config import log_agent_input, log_agent_output
 from agents.prompts import EXPLANATION_AGENT_INSTRUCTIONS
+from agents.utils import is_vague_symptom_message
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +33,23 @@ async def generate_explanation(
         name="PatientExplanationAgent",
         instructions=EXPLANATION_AGENT_INSTRUCTIONS,
     )
+    vague_note = ""
+    if is_vague_symptom_message(symptoms):
+        vague_note = (
+            "The patient message is vague. Explain the REPORT findings first "
+            "(diagnosis, affected area, key findings). Do not focus only on "
+            "'not feeling well' — link discomfort to the report (e.g. ear fluid, hearing)."
+        )
+
     prompt = f"""
     Report summary: {report_summary}
     Grounded knowledge: {knowledge}
     Patient symptoms: {symptoms}
     Literacy level: {literacy_level}
     {_literacy_guidance(literacy_level)}
-    Write a clear, empathetic explanation. Connect symptoms to findings.
-    Acknowledge how the patient may feel. Do not diagnose or prescribe.
+    {vague_note}
+    Write a clear, empathetic explanation. Connect symptoms to report findings when possible.
+    Lead with what the report shows. Do not diagnose or prescribe.
     """
     result = await run_agent(agent, prompt)
     explanation = result.text

@@ -38,6 +38,7 @@ async def translate_explanation(
     Translate and adapt this explanation to {target_language}.
     Audience: {audience}
     {audience_note}
+    Preserve correct medical anatomy in {target_language} (e.g. middle ear ≠ temple/forehead).
     REQUIRED: End with a disclaimer in {target_language} that this is not medical advice.
 
     Explanation:
