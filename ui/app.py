@@ -22,6 +22,7 @@ from ui.demo_presets import SELECT_PLACEHOLDER, get_demo_preset, list_demo_label
 from ui.grandmother_mode import apply_grandmother_mode
 from ui.citation_format import format_citations_for_display, strip_citations_from_text
 from ui.disclaimer_banner import render_disclaimer_banner
+from ui.responsive_styles import apply_responsive_styles
 from ui.safety_indicator import render_safety_indicator
 from ui.trace_panel import render_reasoning_trace
 
@@ -141,6 +142,7 @@ def render_result(result) -> None:
 st.set_page_config(page_title="MedBridge AI", page_icon="🏥", layout="wide")
 
 apply_medbridge_branding()
+apply_responsive_styles()
 render_disclaimer_banner()
 render_header()
 
