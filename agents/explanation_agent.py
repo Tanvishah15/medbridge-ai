@@ -51,6 +51,7 @@ async def generate_explanation(
     {_literacy_guidance(literacy_level)}
     {vague_note}
     Write a clear, empathetic explanation in {output_language} only.
+    Use report-based phrasing only — never "you have [diagnosis]".
     Connect symptoms to report findings when possible.
     Lead with what the report shows. Do not diagnose or prescribe.
     """
