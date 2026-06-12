@@ -279,7 +279,7 @@ streamlit run ui/app.py
 
 ## Foundry IQ integration 🏆
 
-MedBridge uses **Microsoft Foundry IQ** as the hackathon **IQ layer** — medical facts come from a indexed knowledge base, not from model memory alone. The **Medical Knowledge Agent** calls `knowledge_base_retrieve` via MCP and passes citations to the Explanation Agent.
+MedBridge uses **Microsoft Foundry IQ** as the hackathon **IQ layer** — medical facts come from an indexed knowledge base, not from model memory alone. The **Medical Knowledge Agent** calls `knowledge_base_retrieve` via MCP and passes citations to the Explanation Agent.
 
 ### How it works in the pipeline
 
