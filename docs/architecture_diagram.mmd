@@ -1,0 +1,17 @@
+flowchart TD
+    U[User — Streamlit UI] --> IG[Input Guardrails]
+    IG --> B[Orchestrator]
+    B --> C[Document Intelligence Agent]
+    C --> D[Clarification Agent]
+    D -->|needs info| U
+    D --> E[Medical Knowledge Agent + Foundry IQ]
+    E --> F[Patient Explanation Agent]
+    F --> G[Multilingual Agent]
+    G --> H[Safety Agent]
+    H --> OG[Output Guardrails]
+    OG --> U
+
+    style IG fill:#e8f4fc,stroke:#0078d4
+    style OG fill:#e8f4fc,stroke:#0078d4
+    style E fill:#fff4ce,stroke:#ca5010
+    style H fill:#dff6dd,stroke:#107c10

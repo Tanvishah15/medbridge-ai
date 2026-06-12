@@ -41,21 +41,26 @@ Patients receive lab reports, imaging results, and discharge summaries they **ca
 
 ## Architecture
 
+![MedBridge AI — multi-agent pipeline with Foundry IQ and safety guardrails](docs/screenshots/architecture-diagram.png)
+
+*Diagram source:* [docs/architecture_diagram.mmd](docs/architecture_diagram.mmd) — regenerate with `npx @mermaid-js/mermaid-cli -i docs/architecture_diagram.mmd -o docs/screenshots/architecture-diagram.png`
+
 ```mermaid
 flowchart TD
-    A[User — Streamlit UI] --> B[Orchestrator]
-    B --> C[Document Intelligence]
-    C --> D[Planner + Clarification]
-    D -->|needs info| A
-    D --> E[Medical Knowledge + Foundry IQ]
-    E --> F[Patient Explanation]
-    F --> G[Multilingual]
+    U[User — Streamlit UI] --> IG[Input Guardrails]
+    IG --> B[Orchestrator]
+    B --> C[Document Intelligence Agent]
+    C --> D[Clarification Agent]
+    D -->|needs info| U
+    D --> E[Medical Knowledge Agent + Foundry IQ]
+    E --> F[Patient Explanation Agent]
+    F --> G[Multilingual Agent]
     G --> H[Safety Agent]
-    H --> I[Output Guardrails]
-    I --> A
+    H --> OG[Output Guardrails]
+    OG --> U
 ```
 
-**Input guardrails** run before step B. Full design: [docs/architecture.md](docs/architecture.md) · Observability: [docs/observability.md](docs/observability.md)
+Full design: [docs/architecture.md](docs/architecture.md) · Observability: [docs/observability.md](docs/observability.md)
 
 ---
 
