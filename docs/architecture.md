@@ -74,3 +74,9 @@ python scripts/profile_agents.py
 ```
 
 See [sample_outputs.md](sample_outputs.md) for demo output examples (Step 177).
+
+## Evaluation (Steps 232–235)
+
+MedBridge is judged on five criteria: **grounding**, **safety**, **multilingual output**, **clarification loop**, and **symptom-to-report matching**.
+
+See [evaluation_criteria.md](evaluation_criteria.md) for pass/fail definitions and scoring rubric.
