@@ -1,0 +1,41 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    env:
+      MEDBRIDGE_ENABLE_OTEL: ""
+      ENABLE_INSTRUMENTATION: ""
+      APPLICATIONINSIGHTS_CONNECTION_STRING: ""
+      AZURE_AI_PROJECT_ENDPOINT: ""
+      AZURE_CLIENT_SECRET: ""
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run unit tests (no Azure)
+        run: |
+          pytest tests/ \
+            --ignore=tests/test_workflow.py \
+            --ignore=tests/test_demo_scenarios.py \
+            --ignore=tests/test_handoff_workflow.py \
+            --ignore=tests/test_agents.py \
+            --ignore=tests/test_agent_refinement.py \
+            --ignore=tests/test_workflow_hardening.py \
+            -q
