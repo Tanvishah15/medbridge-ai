@@ -228,13 +228,88 @@ streamlit run ui/app.py
 
 ---
 
-## Foundry IQ integration
+## Foundry IQ integration 🏆
 
-MedBridge grounds explanations in a **Foundry IQ knowledge base** indexed from `data/synthetic_knowledge/` (condition explainers, symptom connections, safety policy).
+MedBridge uses **Microsoft Foundry IQ** as the hackathon **IQ layer** — medical facts come from a indexed knowledge base, not from model memory alone. The **Medical Knowledge Agent** calls `knowledge_base_retrieve` via MCP and passes citations to the Explanation Agent.
 
-- KB setup: [knowledge/foundry_iq_setup.md](knowledge/foundry_iq_setup.md)
-- MCP connection name: `FOUNDRY_MCP_CONNECTION_NAME` in config
-- Citations appear in UI and eval scoring (`result.citations`)
+### How it works in the pipeline
+
+```
+data/synthetic_knowledge/*.md  →  Azure Blob  →  Foundry IQ KB  →  MCP  →  Medical Knowledge Agent  →  citations in UI
+```
+
+1. **Upload** synthetic markdown docs to Azure Blob Storage  
+2. **Index** them in a Foundry IQ knowledge base (Azure AI Search)  
+3. **Connect** the KB to your Foundry project via **MCP** (`knowledge_base_retrieve`)  
+4. At runtime, the orchestrator queries the KB with planner-generated questions  
+5. Retrieved chunks appear as **citations** in the Streamlit UI and eval scoring  
+
+### Knowledge base contents
+
+All sources live in [`data/synthetic_knowledge/`](data/synthetic_knowledge/) (demo-only):
+
+| Document | Purpose |
+|----------|---------|
+| `otitis_media.md` | ENT / middle ear condition explainer |
+| `type2_diabetes.md` | Blood sugar / HbA1c context |
+| `cholesterol.md` | LDL/HDL patient language |
+| `microvascular_changes.md` | Brain MRI white-matter changes |
+| `symptom_connections.md` | Links symptoms (e.g. ear discharge) to report findings |
+| `safety_policy.md` | What MedBridge must never do (no diagnosis/prescription) |
+| `glossary.md` | Plain-language medical terms |
+
+### Azure resources (this project)
+
+| Resource | Name |
+|----------|------|
+| Knowledge source | `medbridge-medical-source` (Blob: `medical-knowledge`) |
+| Knowledge base | `medbridge-medical-kb` |
+| Azure AI Search | `medbridgesearchtj` |
+| MCP connection | `medbridge-kb-mcp-connection` |
+| Embedding model | `text-embedding-3-small` |
+
+Full portal setup and test results: [knowledge/foundry_iq_setup.md](knowledge/foundry_iq_setup.md)
+
+### Environment variables
+
+```env
+FOUNDRY_IQ_KB_NAME=medbridge-medical-kb
+AZURE_SEARCH_ENDPOINT=https://YOUR-SEARCH.search.windows.net
+FOUNDRY_MCP_CONNECTION_NAME=medbridge-kb-mcp-connection
+```
+
+### KB setup (summary)
+
+1. **Foundry portal** → Knowledge → create source from Blob container with `data/synthetic_knowledge/` files  
+2. Create knowledge base **`medbridge-medical-kb`** — extractive retrieval, minimal reasoning effort  
+3. **Use in an agent** → create test agent `medbridge-knowledge-test` for portal queries  
+4. **MCP connection** — run `python scripts/create_mcp_connection.py` or create manually in project connections  
+5. Verify tool **`knowledge_base_retrieve`** returns cited chunks  
+
+### Portal verification (passed)
+
+| Test | Query | Result |
+|------|-------|--------|
+| Otitis Media | *What is Otitis Media?* | ✅ Cited condition explainer |
+| Symptom link | *Why would ear discharge match middle ear fluid?* | ✅ Cited `symptom_connections.md` |
+| Safety policy | *Can MedBridge AI diagnose diabetes?* | ✅ NO — cites `safety_policy.md` |
+
+![Foundry IQ — Otitis Media retrieval test](docs/screenshots/Otitis%20Media%20test.png)
+
+![Foundry IQ — symptom connection test](docs/screenshots/Ear%20discharge%20test.png)
+
+![Foundry IQ — safety policy retrieval test](docs/screenshots/Safety%20policy%20test.png)
+
+### Test locally
+
+```powershell
+cd medbridge-ai
+.\.venv\Scripts\Activate.ps1
+python scripts/test_knowledge_agent.py
+python scripts/create_mcp_connection.py
+```
+
+Agent code: [`agents/knowledge_agent.py`](agents/knowledge_agent.py) · Eval grounding criteria: [docs/evaluation_criteria.md](docs/evaluation_criteria.md#1-grounding)
 
 ---
 
