@@ -340,11 +340,7 @@ FOUNDRY_MCP_CONNECTION_NAME=medbridge-kb-mcp-connection
 | Symptom link | *Why would ear discharge match middle ear fluid?* | ✅ Cited `symptom_connections.md` |
 | Safety policy | *Can MedBridge AI diagnose diabetes?* | ✅ NO — cites `safety_policy.md` |
 
-![Foundry IQ — Otitis Media retrieval test](docs/screenshots/Otitis%20Media%20test.png)
-
-![Foundry IQ — symptom connection test](docs/screenshots/Ear%20discharge%20test.png)
-
-![Foundry IQ — safety policy retrieval test](docs/screenshots/Safety%20policy%20test.png)
+Screenshots: [Foundry portal (KB + agent)](#foundry-portal-kb--agent)
 
 ### Test locally
 
@@ -356,6 +352,40 @@ python scripts/create_mcp_connection.py
 ```
 
 Agent code: [`agents/knowledge_agent.py`](agents/knowledge_agent.py) · Eval grounding criteria: [docs/evaluation_criteria.md](docs/evaluation_criteria.md#1-grounding)
+
+---
+
+## Foundry portal (KB + agent)
+
+Microsoft Foundry portal screenshots showing the **knowledge base** wired to a **test agent** — proof of IQ integration for judges.
+
+| Portal asset | Name | Purpose |
+|--------------|------|---------|
+| Knowledge base | `medbridge-medical-kb` | Indexed synthetic medical docs |
+| Test agent | `medbridge-knowledge-test` | KB → **Use in an agent** (portal playground) |
+| MCP connection | `medbridge-kb-mcp-connection` | Runtime `knowledge_base_retrieve` in MedBridge app |
+
+**Where to look in Foundry:** Project → **Knowledge** (KB + sources) · **Agents** (test agent) · **Connections** (MCP)
+
+### Test 1 — Knowledge base retrieval (Otitis Media)
+
+Portal agent answers with **cited sources** from `otitis_media.md`.
+
+![Foundry portal — test agent retrieves Otitis Media with citations](docs/screenshots/Otitis%20Media%20test.png)
+
+### Test 2 — Symptom-to-report grounding
+
+Query links ear discharge to middle ear fluid via `symptom_connections.md`.
+
+![Foundry portal — symptom connection retrieval with sources](docs/screenshots/Ear%20discharge%20test.png)
+
+### Test 3 — Safety policy from knowledge base
+
+Agent refuses diagnosis and cites `safety_policy.md` (use query: *MedBridge AI safety policy*).
+
+![Foundry portal — safety policy retrieval denies diagnosis](docs/screenshots/Safety%20policy%20test.png)
+
+Full setup steps: [knowledge/foundry_iq_setup.md](knowledge/foundry_iq_setup.md)
 
 ---
 
