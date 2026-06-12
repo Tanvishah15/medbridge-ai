@@ -1,0 +1,52 @@
+{
+  "suite_score": 100.0,
+  "case_count": 3,
+  "passed_count": 3,
+  "cases": [
+    {
+      "id": "eval_002",
+      "name": "Hindi ENT — full explanation after clarification",
+      "passed": true,
+      "score_pct": 100.0,
+      "criteria": {
+        "grounding": true,
+        "safety": true,
+        "multilingual": true,
+        "symptom_match": true
+      },
+      "failures": [],
+      "duration_seconds": 66.7,
+      "error": false
+    },
+    {
+      "id": "eval_003",
+      "name": "Spanish family — blood test sugar worry",
+      "passed": true,
+      "score_pct": 100.0,
+      "criteria": {
+        "grounding": true,
+        "safety": true,
+        "multilingual": true,
+        "symptom_match": true
+      },
+      "failures": [],
+      "duration_seconds": 74.7,
+      "error": false
+    },
+    {
+      "id": "eval_004",
+      "name": "Arabic family — brain MRI summary",
+      "passed": true,
+      "score_pct": 100.0,
+      "criteria": {
+        "grounding": true,
+        "safety": true,
+        "multilingual": true,
+        "symptom_match": true
+      },
+      "failures": [],
+      "duration_seconds": 71.6,
+      "error": false
+    }
+  ]
+}

@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from agents.models import MedBridgeResponse
+from tests.language_parity import PARITY_CASE_IDS, compare_parity_suite
 
 EVAL_FILE = Path(__file__).resolve().parent / "eval_cases.json"
 REPORTS_DIR = ROOT / "data" / "synthetic_reports"
@@ -356,7 +357,15 @@ def main(argv: list[str] | None = None) -> int:
         help=f"Write JSON results (default: {RESULTS_FILE.name})",
     )
     parser.add_argument("--dry-run", action="store_true", help="List cases only; no Azure calls")
+    parser.add_argument(
+        "--parity",
+        action="store_true",
+        help="Step 241: run Hindi/Spanish/Arabic parity cases (eval_002–004)",
+    )
     args = parser.parse_args(argv)
+
+    if args.parity:
+        args.case = list(PARITY_CASE_IDS)
 
     data = load_eval_cases()
     cases = data["cases"]
@@ -385,8 +394,25 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Running {len(cases)} eval case(s)…")
     results, suite_score = asyncio.run(run_eval_suite([c["id"] for c in cases]))
     print(format_report(results, suite_score))
+
+    exit_code = 0
+    if args.parity:
+        parity_ok, parity_failures = compare_parity_suite(results)
+        print("")
+        print("Language parity (Step 241)")
+        print("=" * 40)
+        if parity_ok:
+            print("PASS — Hindi, Spanish, and Arabic meet the same quality bar.")
+        else:
+            print("FAIL — parity gaps detected:")
+            for item in parity_failures:
+                print(f"  ! {item}")
+            exit_code = 1
+
     save_results(results, suite_score, args.output)
     print(f"Results saved to {args.output}")
+    if exit_code:
+        return exit_code
     return 0 if all(r.passed for r in results) else 1
 
 
