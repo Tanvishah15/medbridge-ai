@@ -3,6 +3,8 @@
 __pycache__/
 *.pyc
 .DS_Store
+desktop.ini
+Thumbs.db
 .idea/
 .vscode/
 *.log
