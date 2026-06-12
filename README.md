@@ -5,6 +5,7 @@
 Multilingual medical reasoning platform — six Foundry agents, clarification loop, Foundry IQ grounding, and layered safety guardrails.
 
 ![Tests](https://github.com/Tanvishah15/medbridge-ai/actions/workflows/test.yml/badge.svg)
+![License: MIT](https://img.shields.io/github/license/Tanvishah15/medbridge-ai)
 **Live demo:** [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app) · **Repo:** [github.com/Tanvishah15/medbridge-ai](https://github.com/Tanvishah15/medbridge-ai)
 
 ---
