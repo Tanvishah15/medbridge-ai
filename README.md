@@ -110,13 +110,7 @@ Script and judge talking points: [docs/demo_scenarios.md](docs/demo_scenarios.md
 
 ### 1. Clone and install
 
-```powershell
-git clone https://github.com/Tanvishah15/medbridge-ai.git
-cd medbridge-ai
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
+See [How to Run → One-time setup](#one-time-setup).
 
 ### 2. Configure environment
 
@@ -136,13 +130,101 @@ AZURE_CLIENT_SECRET=your-client-secret
 
 Streamlit Cloud: use [.streamlit/secrets.toml.example](.streamlit/secrets.toml.example) as a template in **Manage app → Secrets**.
 
-### 3. Run locally
+---
+
+## How to Run
+
+All commands assume you are in the repo root (`medbridge-ai/`). On Windows use PowerShell.
+
+### One-time setup
 
 ```powershell
+git clone https://github.com/Tanvishah15/medbridge-ai.git
+cd medbridge-ai
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+Create `.env` from [.streamlit/secrets.toml.example](.streamlit/secrets.toml.example) (see [Setup](#setup) above). **Never commit `.env`.**
+
+### Verify Azure (optional)
+
+```powershell
+cd medbridge-ai
+.\.venv\Scripts\Activate.ps1
+python scripts/test_foundry.py
+python scripts/test_service_principal.py
+```
+
+### Streamlit UI (primary demo)
+
+```powershell
+cd medbridge-ai
+.\.venv\Scripts\Activate.ps1
 streamlit run ui/app.py
 ```
 
-Open `http://localhost:8501` → pick a demo preset → **Understand My Report**.
+Open **http://localhost:8501** → choose a demo preset (e.g. Hindi ENT) → click **Understand My Report**.
+
+**Live (no install):** [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app)
+
+### CLI workflow smoke test
+
+```powershell
+cd medbridge-ai
+.\.venv\Scripts\Activate.ps1
+python -m orchestrator.workflow
+```
+
+Or: `python scripts/test_workflow.py`
+
+### Automated eval suite
+
+```powershell
+cd medbridge-ai
+.\.venv\Scripts\Activate.ps1
+python tests/run_eval.py --output tests/eval_results_full.json
+python tests/run_eval.py --parity
+python tests/run_eval.py --case eval_008 --case eval_009 --case eval_010
+python tests/run_eval.py --dry-run
+```
+
+Target: **≥ 80%** suite score (current: **100%** — 10/10 cases).
+
+### Unit tests (no Azure)
+
+```powershell
+cd medbridge-ai
+.\.venv\Scripts\Activate.ps1
+pytest tests/ `
+  --ignore=tests/test_workflow.py `
+  --ignore=tests/test_demo_scenarios.py `
+  --ignore=tests/test_handoff_workflow.py `
+  --ignore=tests/test_agents.py `
+  --ignore=tests/test_agent_refinement.py `
+  --ignore=tests/test_workflow_hardening.py `
+  -q
+```
+
+### Full integration tests (Azure required)
+
+```powershell
+cd medbridge-ai
+.\.venv\Scripts\Activate.ps1
+pytest tests/test_workflow.py tests/test_demo_scenarios.py -v
+python scripts/test_demo_scenarios.py
+python scripts/profile_agents.py
+```
+
+### macOS / Linux
+
+```bash
+cd medbridge-ai
+source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run ui/app.py
+```
 
 ---
 
@@ -166,13 +248,8 @@ Automated **10-case eval suite** (`tests/eval_cases.json`) — target ≥ 80% pa
 | **Adversarial** | eval_008–010 pass (prescribe / cancer / stop meds) |
 | **Multilingual parity** | Hindi, Spanish, Arabic — equal quality bar |
 
-```powershell
-python tests/run_eval.py --output tests/eval_results_full.json
-python tests/run_eval.py --parity
-python tests/run_eval.py --case eval_008 --case eval_009 --case eval_010
-```
-
-Criteria details: [docs/evaluation_criteria.md](docs/evaluation_criteria.md)
+Criteria details: [docs/evaluation_criteria.md](docs/evaluation_criteria.md)  
+Run commands: [How to Run → Automated eval suite](#automated-eval-suite)
 
 ---
 
@@ -199,15 +276,9 @@ pytest tests/test_input_guardrails.py tests/test_output_guardrails.py tests/test
 
 ## Testing & CI
 
-GitHub Actions runs unit tests on every push (no Azure secrets required).
+GitHub Actions runs unit tests on every push. For exact commands see [How to Run → Unit tests](#unit-tests-no-azure).
 
-```powershell
-pytest tests/ -v
-python scripts/profile_agents.py
-python scripts/test_demo_scenarios.py
-```
-
-Integration tests (require Azure `.env`): `tests/test_workflow.py`, `tests/test_demo_scenarios.py`
+Integration tests: [How to Run → Full integration tests](#full-integration-tests-azure-required)
 
 ---
 
