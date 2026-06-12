@@ -38,6 +38,7 @@ Patients receive lab reports, imaging results, and discharge summaries they **ca
 | **UI** | Streamlit (live on Streamlit Cloud) |
 | **Eval suite** | 10 automated cases — **100% pass** (see [Evaluation](#evaluation)) |
 | **Demo video** | *[YouTube — add before submission](#demo-video)* |
+| **External links** | [docs/EXTERNAL_LINKS.md](docs/EXTERNAL_LINKS.md) |
 
 ---
 
@@ -509,6 +510,22 @@ https://youtu.be/abc123xyz
 ## Team
 
 **Tanvi Shah** — [Tanvishah15](https://github.com/Tanvishah15)
+
+---
+
+## Acknowledgments
+
+MedBridge AI was built for the **[Agents League Hackathon 2026](https://github.com/microsoft/agentsleague)** (Reasoning Agents track).
+
+We thank:
+
+- **[Microsoft Foundry](https://ai.azure.com)** — project hosting, model deployments, and **Foundry IQ** knowledge grounding  
+- **[Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/overview/)** — multi-agent orchestration, handoffs, and OpenTelemetry observability  
+- **[Agents League](https://github.com/microsoft/agentsleague)** — starter kit, community, and hackathon structure  
+- **[Streamlit](https://streamlit.io/)** — patient-facing demo UI on Streamlit Cloud  
+- **Azure AI Search** — retrieval backend for Foundry IQ  
+
+External links index: [docs/EXTERNAL_LINKS.md](docs/EXTERNAL_LINKS.md)
 
 ---
 
