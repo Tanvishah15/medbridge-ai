@@ -2,6 +2,8 @@
 
 Multilingual Medical Reasoning & Patient Understanding Platform
 
+![Tests](https://github.com/Tanvishah15/medbridge-ai/actions/workflows/test.yml/badge.svg)
+
 ## Demo UI
 
 **Live demo:** [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app)
