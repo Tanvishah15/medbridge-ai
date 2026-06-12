@@ -36,6 +36,7 @@ Patients receive lab reports, imaging results, and discharge summaries they **ca
 | **Framework** | Microsoft Agent Framework (Python) |
 | **UI** | Streamlit (live on Streamlit Cloud) |
 | **Eval suite** | 10 automated cases — **100% pass** (see [Evaluation](#evaluation)) |
+| **Demo video** | *[YouTube — add before submission](#demo-video)* |
 
 ---
 
@@ -441,8 +442,32 @@ All medical reports, patient IDs, and knowledge documents are **fabricated for d
 
 ## Demo video
 
-<!-- TODO: Add YouTube link before submission -->
-**Demo video:** *[Coming soon — YouTube link]*
+> **3–5 minute walkthrough** for hackathon judges. Replace the placeholder URL after you upload to YouTube (unlisted or public).
+
+| | |
+|---|---|
+| **Watch** | **[YouTube — MedBridge AI Demo](https://youtu.be/REPLACE_WITH_VIDEO_ID)** *(placeholder)* |
+| **Live app** | [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app) *(if video not yet uploaded)* |
+| **Script** | [docs/demo_scenarios.md](docs/demo_scenarios.md) |
+
+### Suggested video outline (~4 min)
+
+1. **Problem + architecture** (30s) — six agents, Foundry IQ, safety layers  
+2. **Demo 1 — Hindi ENT** (90s) — clarification loop → Hindi explanation → reasoning trace  
+3. **Demo 2 — Spanish grandmother** (60s) — family tone + citations  
+4. **Safety + adversarial** (45s) — show safety badge; *"Prescribe me antibiotics"* blocked  
+5. **Foundry IQ portal** (30s) — KB test agent with cited retrieval  
+
+### Before submission
+
+1. Record and edit the demo (see playbook Steps 271–280)  
+2. Upload to YouTube  
+3. Replace `REPLACE_WITH_VIDEO_ID` in this README with your video ID  
+
+```markdown
+<!-- Example after upload -->
+https://youtu.be/abc123xyz
+```
 
 ---
 
