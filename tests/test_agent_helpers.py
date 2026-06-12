@@ -32,3 +32,5 @@ def test_has_empathy_tone():
 
 def test_has_disclaimer():
     assert has_disclaimer("Please consult your doctor.") is True
+    assert has_disclaimer("कृपया अपने डॉक्टर से परामर्श करें।") is True
+    assert has_disclaimer("Consulte a su médico.") is True

@@ -12,6 +12,25 @@ DEFAULT_DISCLAIMER = (
     "Please consult your doctor or healthcare provider."
 )
 
+LANGUAGE_FALLBACK_DISCLAIMERS = {
+    "hindi": (
+        "\n\nअस्वीकरण: यह शैक्षिक जानकारी है, चिकित्सा सलाह नहीं। "
+        "कृपया अपने डॉक्टर से परामर्श करें।"
+    ),
+    "spanish": (
+        "\n\nAviso: Esta información es educativa, no es consejo médico. "
+        "Consulte a su médico."
+    ),
+    "arabic": (
+        "\n\nتنبيه: هذه معلومات تعليمية وليست نصيحة طبية. "
+        "يرجى استشارة طبيبك."
+    ),
+}
+
+
+def _fallback_disclaimer(target_language: str) -> str:
+    return LANGUAGE_FALLBACK_DISCLAIMERS.get(target_language.lower(), DEFAULT_DISCLAIMER)
+
 
 async def translate_explanation(
     explanation: str,
@@ -47,8 +66,8 @@ async def translate_explanation(
     result = await run_agent(agent, prompt)
     translated = result.text
     if not has_disclaimer(translated):
-        logger.warning("%s | Disclaimer missing — appending default", agent_name)
-        translated = translated.rstrip() + DEFAULT_DISCLAIMER
+        logger.warning("%s | Disclaimer missing — appending fallback", agent_name)
+        translated = translated.rstrip() + _fallback_disclaimer(target_language)
 
     log_agent_output(agent_name, translated=translated)
     return translated

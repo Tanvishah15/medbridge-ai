@@ -12,7 +12,7 @@ import asyncio
 import streamlit as st
 from dotenv import load_dotenv
 
-from config import azure_cloud_credentials_configured, azure_configured, bootstrap_environment
+from config import azure_cloud_credentials_configured, azure_configured, bootstrap_environment, is_streamlit_cloud
 
 load_dotenv()
 bootstrap_environment()
@@ -25,6 +25,7 @@ from ui.demo_presets import SELECT_PLACEHOLDER, get_demo_preset, list_demo_label
 from ui.grandmother_mode import apply_grandmother_mode
 from ui.citation_format import format_citations_for_display, strip_citations_from_text
 from ui.disclaimer_banner import render_disclaimer_banner
+from ui.explanation_format import strip_trailing_english_disclaimer
 from ui.loading_steps import LoadingStepTracker
 from ui.responsive_styles import apply_responsive_styles
 from ui.safety_indicator import render_safety_indicator
@@ -140,7 +141,7 @@ def render_header() -> None:
     )
 
 
-def render_result(result) -> None:
+def render_result(result, language: str = "English") -> None:
     if result.error:
         st.error(result.error_message or "Something went wrong. Please try again.")
         return
@@ -149,14 +150,14 @@ def render_result(result) -> None:
         st.warning("I need a bit more information before explaining:")
         for question in result.clarification_questions:
             st.write(f"• {format_question(question)}")
-        if result.session_id:
-            st.caption(f"Session checkpoint: `{result.session_id}`")
         return
 
     render_safety_indicator(result.safety_passed, result.safety_notes)
 
     st.markdown("### 💬 Your explanation")
-    st.write(strip_citations_from_text(result.explanation))
+    explanation = strip_citations_from_text(result.explanation)
+    explanation = strip_trailing_english_disclaimer(explanation, language)
+    st.write(explanation)
 
     formatted_sources = format_citations_for_display(result.citations)
     if formatted_sources:
@@ -178,7 +179,7 @@ if not azure_configured():
         "Azure is not configured. Add **AZURE_AI_PROJECT_ENDPOINT** (and other keys) in "
         "Streamlit Cloud → Manage app → Settings → Secrets. See `.streamlit/secrets.toml.example`."
     )
-elif not azure_cloud_credentials_configured():
+elif not azure_cloud_credentials_configured() and is_streamlit_cloud():
     st.warning(
         "For Streamlit Cloud, also add **AZURE_TENANT_ID**, **AZURE_CLIENT_ID**, and "
         "**AZURE_CLIENT_SECRET** in Secrets (service principal). Local `az login` does not work in the cloud."
@@ -200,6 +201,11 @@ if demo_choice != SELECT_PLACEHOLDER:
     if st.session_state.get("_loaded_demo") != demo_choice:
         _apply_demo_preset(demo_choice)
         st.session_state._loaded_demo = demo_choice
+        st.session_state.last_result = None
+        st.session_state.last_trace = []
+        st.session_state.pending_clarification = False
+        st.session_state.medbridge_session_id = None
+        st.session_state.clarification_questions = []
         st.rerun()
     preset = get_demo_preset(demo_choice)
     if preset:
@@ -287,6 +293,7 @@ if clear_clicked:
     st.session_state.pop("demo_symptoms", None)
     st.session_state.pop("_loaded_demo", None)
     st.session_state.pop("symptoms_input", None)
+    st.session_state.demo_choice = SELECT_PLACEHOLDER
     st.session_state.ui_language = "English"
     st.session_state.ui_audience = "patient"
     st.session_state.ui_literacy = "simple"
@@ -342,11 +349,15 @@ if run_clicked:
             st.rerun()
         else:
             st.session_state.last_result = result
+            st.session_state.last_language = language
             st.rerun()
 
 if st.session_state.last_result and not st.session_state.pending_clarification:
     st.divider()
-    render_result(st.session_state.last_result)
+    render_result(
+        st.session_state.last_result,
+        st.session_state.get("last_language", "English"),
+    )
 
 if st.session_state.last_trace:
     st.divider()

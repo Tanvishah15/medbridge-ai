@@ -95,3 +95,8 @@ def azure_configured() -> bool:
 def azure_cloud_credentials_configured() -> bool:
     bootstrap_environment()
     return all(_get_secret(key) for key in ("AZURE_TENANT_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET"))
+
+
+def is_streamlit_cloud() -> bool:
+    """True on Streamlit Community Cloud (/mount/src workspace)."""
+    return os.path.isdir("/mount/src")

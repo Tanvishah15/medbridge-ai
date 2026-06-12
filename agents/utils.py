@@ -36,6 +36,19 @@ DISCLAIMER_MARKERS = [
     "educational",
 ]
 
+MULTILINGUAL_DISCLAIMER_MARKERS = [
+    "डॉक्टर",
+    "चिकित्सक",
+    "अस्वीकरण",
+    "médico",
+    "consulte",
+    "aconsejo",
+    "aviso",
+    "طبيب",
+    "استشر",
+    "تنبيه",
+]
+
 DURATION_MARKERS = [
     "day",
     "days",
@@ -138,7 +151,9 @@ def has_empathy_tone(text: str) -> bool:
 
 def has_disclaimer(text: str) -> bool:
     lower = text.lower()
-    return any(marker in lower for marker in DISCLAIMER_MARKERS)
+    if any(marker in lower for marker in DISCLAIMER_MARKERS):
+        return True
+    return any(marker in text for marker in MULTILINGUAL_DISCLAIMER_MARKERS)
 
 
 def extract_citation_markers(text: str) -> list[str]:
