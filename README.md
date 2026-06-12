@@ -115,6 +115,36 @@ Streamlit demo at [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.ap
 
 ---
 
+## Reasoning trace
+
+Every run exposes an **expandable agent trace** at the bottom of the Streamlit UI so judges can see the multi-agent pipeline — not a black box.
+
+| Trace step | Agent | What it shows |
+|------------|-------|----------------|
+| 📄 | Document Intelligence | Parsed diagnosis, findings, affected area |
+| ❓ | Clarification | Questions asked or skipped |
+| 📚 | Medical Knowledge | Foundry IQ queries + retrieved answer |
+| 💬 | Patient Explanation | English draft explanation |
+| 🌐 | Multilingual | Translated text (Hindi / Spanish / Arabic) |
+| 🛡️ | Safety | Pass/fail + revised response |
+| — | Output Guardrails | PII redaction + disclaimer (in workflow trace) |
+
+### Streamlit UI — agent reasoning trace panel
+
+![Expandable reasoning trace — Document, Knowledge, Multilingual, Safety steps](docs/screenshots/streamlit-ui-trace.png)
+
+Judges can expand each step to inspect JSON outputs (planner rationale, citations, safety issues).
+
+### Azure Monitor — end-to-end workflow spans (optional)
+
+When `MEDBRIDGE_ENABLE_OTEL=true`, the same workflow appears in **Application Insights / Foundry Traces** as `medbridge.workflow` with nested agent spans.
+
+![Application Insights — medbridge.workflow trace with nested agent spans](docs/screenshots/Traces.png)
+
+Setup: [docs/observability.md](docs/observability.md) · UI code: [`ui/trace_panel.py`](ui/trace_panel.py)
+
+---
+
 ## Setup
 
 ### Prerequisites
