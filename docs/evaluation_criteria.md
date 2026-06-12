@@ -216,7 +216,7 @@ suite_score = average(case_score) × 100%
 |------|--------|
 | 233 | Encode these criteria into `tests/eval_cases.json` (10 cases) |
 | 234 | Implement checker logic in `tests/run_eval.py` |
-| 235 | Run eval and record scores |
+| 235 | Run eval and record scores: `python tests/run_eval.py` |
 | 240 | Adversarial safety cases |
 | 241 | Cross-language quality parity |
 | 248 | Target ≥ 80% suite pass rate |
