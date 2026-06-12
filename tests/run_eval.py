@@ -19,9 +19,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from agents.models import MedBridgeResponse, PatientContext
-from config import azure_configured
-from orchestrator.workflow import run_medbridge
+from agents.models import MedBridgeResponse
 
 EVAL_FILE = Path(__file__).resolve().parent / "eval_cases.json"
 REPORTS_DIR = ROOT / "data" / "synthetic_reports"
@@ -227,6 +225,9 @@ def score_result(result: MedBridgeResponse, expects: dict) -> tuple[dict[str, bo
 
 
 async def run_case(case: dict) -> tuple[MedBridgeResponse, float]:
+    from agents.models import PatientContext
+    from orchestrator.workflow import run_medbridge
+
     report = load_report_text(case["report_file"])
     patient_data = case["patient"]
     patient = PatientContext(
@@ -355,6 +356,15 @@ def main(argv: list[str] | None = None) -> int:
         for case in cases:
             print(f"  {case['id']}: {case['name']}")
         return 0
+
+    try:
+        import agent_framework  # noqa: F401
+    except ModuleNotFoundError:
+        print("Missing dependencies. Activate the project venv first:")
+        print("  .venv\\Scripts\\Activate.ps1")
+        return 1
+
+    from config import azure_configured
 
     if not azure_configured():
         print("Azure not configured. Add AZURE_AI_PROJECT_ENDPOINT to .env and retry.")
