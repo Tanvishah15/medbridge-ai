@@ -89,13 +89,29 @@ All agents: 30s timeout, 1 retry, structured logging. See [docs/sample_outputs.m
 
 Script and judge talking points: [docs/demo_scenarios.md](docs/demo_scenarios.md)
 
-### Screenshots
+---
 
-![Demo preset loaded — Hindi ENT](docs/screenshots/streamlit-ui-demo-loaded.png)
+## UI Screenshots
 
-![Hindi explanation with safety badge and Foundry IQ sources](docs/screenshots/streamlit-ui-demo-ent.png)
+Streamlit demo at [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app). Regenerate locally: `python scripts/capture_ui_screenshots.py`
 
-![Agent reasoning trace](docs/screenshots/streamlit-ui-trace.png)
+| Screen | What judges should notice |
+|--------|---------------------------|
+| **Home** | Disclaimer banner, demo presets, language / audience settings |
+| **Demo loaded** | Hindi ENT preset — report + symptoms pre-filled |
+| **Explanation** | Hindi output, **Safety validated** badge, Foundry IQ sources |
+
+### Home — demo presets & settings
+
+![MedBridge Streamlit home — disclaimer, demo dropdown, language settings](docs/screenshots/streamlit-ui-home.png)
+
+### Demo 1 loaded — Hindi ENT preset
+
+![Demo 1 preset loaded — synthetic ENT report and Hindi symptoms](docs/screenshots/streamlit-ui-demo-loaded.png)
+
+### Explanation — Hindi + safety badge + citations
+
+![Hindi explanation with safety validated badge and knowledge sources](docs/screenshots/streamlit-ui-demo-ent.png)
 
 ---
 
