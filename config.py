@@ -73,6 +73,12 @@ def bootstrap_environment() -> None:
     load_dotenv()
     _merge_streamlit_secrets()
     _apply_config_from_env()
+    try:
+        from orchestrator.telemetry import setup_observability
+
+        setup_observability()
+    except Exception:
+        pass
 
 
 bootstrap_environment()

@@ -7,6 +7,7 @@ from azure.identity import AzureCliCredential, ClientSecretCredential, DefaultAz
 import config
 
 from agents import logging_config  # noqa: F401
+from orchestrator.telemetry import agent_display_name, workflow_span
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +51,11 @@ async def run_agent(agent, prompt: str):
 
     for attempt in range(attempts):
         try:
-            return await asyncio.wait_for(
-                agent.run(prompt),
-                timeout=AGENT_TIMEOUT_SECONDS,
-            )
+            with workflow_span("medbridge.agent.run", agent=agent_display_name(agent)):
+                return await asyncio.wait_for(
+                    agent.run(prompt),
+                    timeout=AGENT_TIMEOUT_SECONDS,
+                )
         except asyncio.TimeoutError as exc:
             last_error = exc
             logger.warning(

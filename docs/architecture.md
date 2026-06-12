@@ -80,3 +80,7 @@ See [sample_outputs.md](sample_outputs.md) for demo output examples (Step 177).
 MedBridge is judged on five criteria: **grounding**, **safety**, **multilingual output**, **clarification loop**, and **symptom-to-report matching**.
 
 See [evaluation_criteria.md](evaluation_criteria.md) for pass/fail definitions and scoring rubric.
+
+## Observability (Steps 236–237)
+
+Optional OpenTelemetry tracing via Agent Framework. Off by default; enable with `MEDBRIDGE_ENABLE_OTEL=true`. See [observability.md](observability.md).

@@ -22,6 +22,7 @@ from orchestrator.errors import friendly_error_message
 from orchestrator.pdf_utils import resolve_report_text
 from orchestrator.planner import plan_workflow
 from orchestrator.reflection import needs_knowledge_retry, reflect_on_explanation
+from orchestrator.telemetry import trace_async_workflow
 from orchestrator.trace import ReasoningTrace
 
 logger = logging.getLogger(__name__)
@@ -61,6 +62,7 @@ async def _retrieve_knowledge(queries: list[str], report_context: str) -> dict:
     }
 
 
+@trace_async_workflow
 async def run_medbridge(
     report_text: str,
     patient: PatientContext,
