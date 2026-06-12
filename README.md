@@ -483,7 +483,7 @@ All medical reports, patient IDs, and knowledge documents are **fabricated for d
 |---|---|
 | **Watch** | **[YouTube — MedBridge AI Demo](https://youtu.be/REPLACE_WITH_VIDEO_ID)** *(placeholder)* |
 | **Live app** | [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app) *(if video not yet uploaded)* |
-| **Script** | [docs/demo_scenarios.md](docs/demo_scenarios.md) |
+| **Script** | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
 
 ### Suggested video outline (~4 min)
 
