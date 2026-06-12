@@ -102,20 +102,27 @@ def workflow_span(name: str, **attributes: Any) -> Iterator[None]:
     try:
         from agent_framework.observability import get_tracer
         from opentelemetry.trace import SpanKind, Status, StatusCode
-
-        tracer = get_tracer()
-        with tracer.start_as_current_span(name, kind=SpanKind.INTERNAL) as span:
-            for key, value in attributes.items():
-                if value is not None:
-                    span.set_attribute(f"medbridge.{key}", str(value)[:500])
-            try:
-                yield
-            except Exception as exc:
-                span.record_exception(exc)
-                span.set_status(Status(StatusCode.ERROR, str(exc)))
-                raise
-    except Exception:
+    except ImportError:
         yield
+        return
+
+    try:
+        tracer = get_tracer()
+    except Exception as exc:
+        logger.warning("OTel span skipped: %s", exc)
+        yield
+        return
+
+    with tracer.start_as_current_span(name, kind=SpanKind.INTERNAL) as span:
+        for key, value in attributes.items():
+            if value is not None:
+                span.set_attribute(f"medbridge.{key}", str(value)[:500])
+        try:
+            yield
+        except Exception as exc:
+            span.record_exception(exc)
+            span.set_status(Status(StatusCode.ERROR, str(exc)))
+            raise
 
 
 def trace_async_workflow(func: F) -> F:

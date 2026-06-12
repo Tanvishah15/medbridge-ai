@@ -18,6 +18,7 @@ load_dotenv()
 bootstrap_environment()
 
 from agents.models import PatientContext
+from agents.input_guardrails import check_user_inputs
 from agents.utils import is_vague_symptom_message
 from orchestrator.workflow import run_medbridge_safe
 from ui.clarification_ui import format_question, render_clarification_inputs
@@ -308,49 +309,60 @@ if run_clicked:
     elif st.session_state.pending_clarification and not clarification_answers_list:
         st.error("Please answer at least one clarification question above.")
     else:
-        answers_list = None
-        if st.session_state.pending_clarification and clarification_answers_list:
-            answers_list = clarification_answers_list
-
-        report_bytes = uploaded.getvalue() if uploaded is not None else None
-        report_filename = uploaded.name if uploaded is not None else ""
-        report_input = report if report.strip() else ""
-
-        with st.status("MedBridge agents are reasoning...", expanded=True) as status:
-            timeline = st.empty()
-            progress = LoadingStepTracker(status, timeline)
-            patient = PatientContext(
-                symptoms=symptoms,
-                language=language,
-                literacy_level=literacy,
-                audience=audience,
-            )
-            result = asyncio.run(
-                run_medbridge_safe(
-                    report_input,
-                    patient,
-                    clarification_answers=answers_list,
-                    session_id=st.session_state.medbridge_session_id if answers_list else None,
-                    report_bytes=report_bytes,
-                    report_filename=report_filename,
-                    progress_callback=progress,
-                )
-            )
-            status.update(label="Done!", state="complete")
-
-        st.session_state.last_trace = result.trace
-        st.session_state.pending_clarification = result.clarification_needed
-        st.session_state.medbridge_session_id = result.session_id if result.clarification_needed else None
-        st.session_state.clarification_questions = (
-            result.clarification_questions if result.clarification_needed else []
+        guardrail = check_user_inputs(
+            symptoms=symptoms,
+            report_text=report,
+            clarification_answers=clarification_answers_list,
         )
-        if result.clarification_needed:
-            st.session_state.last_result = None
-            st.rerun()
+        if guardrail.blocked:
+            st.error(
+                "Please use synthetic demo data only — do not paste real personal information "
+                f"(SSN, credit card, or email). Detected: {'; '.join(guardrail.reasons)}"
+            )
         else:
-            st.session_state.last_result = result
-            st.session_state.last_language = language
-            st.rerun()
+            answers_list = None
+            if st.session_state.pending_clarification and clarification_answers_list:
+                answers_list = clarification_answers_list
+
+            report_bytes = uploaded.getvalue() if uploaded is not None else None
+            report_filename = uploaded.name if uploaded is not None else ""
+            report_input = report if report.strip() else ""
+
+            with st.status("MedBridge agents are reasoning...", expanded=True) as status:
+                timeline = st.empty()
+                progress = LoadingStepTracker(status, timeline)
+                patient = PatientContext(
+                    symptoms=symptoms,
+                    language=language,
+                    literacy_level=literacy,
+                    audience=audience,
+                )
+                result = asyncio.run(
+                    run_medbridge_safe(
+                        report_input,
+                        patient,
+                        clarification_answers=answers_list,
+                        session_id=st.session_state.medbridge_session_id if answers_list else None,
+                        report_bytes=report_bytes,
+                        report_filename=report_filename,
+                        progress_callback=progress,
+                    )
+                )
+                status.update(label="Done!", state="complete")
+
+            st.session_state.last_trace = result.trace
+            st.session_state.pending_clarification = result.clarification_needed
+            st.session_state.medbridge_session_id = result.session_id if result.clarification_needed else None
+            st.session_state.clarification_questions = (
+                result.clarification_questions if result.clarification_needed else []
+            )
+            if result.clarification_needed:
+                st.session_state.last_result = None
+                st.rerun()
+            else:
+                st.session_state.last_result = result
+                st.session_state.last_language = language
+                st.rerun()
 
 if st.session_state.last_result and not st.session_state.pending_clarification:
     st.divider()

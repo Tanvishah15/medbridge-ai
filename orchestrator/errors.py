@@ -1,7 +1,16 @@
 import asyncio
 
+from agents.input_guardrails import InputGuardrailError
+
 
 def friendly_error_message(exc: Exception) -> str:
+    if isinstance(exc, InputGuardrailError):
+        detail = "; ".join(exc.reasons)
+        return (
+            "Please use synthetic demo data only — do not paste real personal information "
+            f"(SSN, credit card, or email). Detected: {detail}"
+        )
+
     if isinstance(exc, ValueError):
         msg = str(exc)
         lower = msg.lower()

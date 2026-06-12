@@ -7,10 +7,12 @@ from pathlib import Path
 from agents.clarification_agent import get_clarification_questions
 from agents.document_agent import parse_report
 from agents.explanation_agent import generate_explanation
+from agents.input_guardrails import enforce_input_guardrails
 from agents.knowledge_agent import retrieve_medical_knowledge
 from agents.logging_config import estimate_tokens, log_agent_input, log_agent_output, log_workflow_metrics
 from agents.models import MedBridgeResponse, PatientContext
 from agents.multilingual_agent import translate_explanation
+from agents.output_guardrails import apply_output_guardrails
 from agents.safety_agent import validate_response
 from config import MAX_CLARIFICATION_ROUNDS, WORKFLOW_TIMEOUT_SECONDS
 from orchestrator.checkpoint import (
@@ -92,6 +94,12 @@ async def run_medbridge(
             report_bytes=report_bytes,
             filename=report_filename,
         )
+
+    enforce_input_guardrails(
+        symptoms=patient.symptoms,
+        report_text=report_text,
+        clarification_answers=clarification_answers,
+    )
 
     _notify_progress(progress_callback, "reading_report")
 
@@ -271,13 +279,27 @@ async def run_medbridge(
         )
 
     safety = await validate_response(explanation)
-    final = safety.get("revised_response", explanation)
+    guardrail = apply_output_guardrails(
+        safety.get("revised_response", explanation),
+        safety_passed=safety.get("safe", True),
+        safety_issues=safety.get("issues", []),
+    )
+    final = guardrail.text
     trace.add(
         "Safety",
         {
             "safe": safety.get("safe", True),
             "issues": safety.get("issues", []),
-            "revised_response": final,
+            "revised_response": safety.get("revised_response", explanation),
+        },
+    )
+    trace.add(
+        "OutputGuardrails",
+        {
+            "passed": guardrail.passed,
+            "issues": guardrail.issues,
+            "redacted": guardrail.redacted,
+            "text": final,
         },
     )
 
@@ -285,8 +307,8 @@ async def run_medbridge(
         explanation=final,
         citations=knowledge.get("citations", []),
         clarification_needed=False,
-        safety_passed=safety.get("safe", True),
-        safety_notes=safety.get("issues", []),
+        safety_passed=safety.get("safe", True) and guardrail.passed,
+        safety_notes=guardrail.issues,
         trace=trace.to_list(),
     )
     log_agent_output(
