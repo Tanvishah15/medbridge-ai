@@ -31,6 +31,114 @@ User Upload + Message
 | Multilingual | `agents/multilingual_agent.py` | Translates for Hindi, Spanish, Arabic, etc. Family audience uses warmer tone. Always includes disclaimer. | Fast | 30s / 1 retry |
 | Safety | `agents/safety_agent.py` | Blocks diagnosis, prescriptions, treatment changes. Escalates emergencies. Safe responses pass through unchanged. | Primary | 30s / 1 retry |
 
+## Agent prompts summary (Step 261)
+
+Canonical prompt text lives in [`agents/prompts.py`](../agents/prompts.py). Orchestrator helpers add their own instructions in `orchestrator/planner.py` and `orchestrator/reflection.py`.
+
+### Document Intelligence
+
+**Goal:** Extract only what the report states — never diagnose.
+
+| Key rule | Detail |
+|----------|--------|
+| Output | JSON: `diagnosis`, `findings[]`, `affected_area`, `recommendations[]` |
+| Constraint | Never diagnose; extract report text only |
+| Fallback | Empty/malformed input → empty fields + helpful finding message |
+
+### Workflow Planner
+
+**Goal:** Decide clarification, knowledge queries, and multilingual routing before agents run.
+
+| Key rule | Detail |
+|----------|--------|
+| Output | JSON: `needs_clarification`, `knowledge_queries[]`, `use_multilingual`, `rationale` |
+| Clarification | `true` when symptoms lack duration, pain, or fever and no answers yet |
+| Knowledge | 1–3 focused queries combining symptoms + report diagnosis |
+| Language | `use_multilingual=true` when target language ≠ English |
+
+### Clarification
+
+**Goal:** Ask what's missing — do not explain yet.
+
+| Key rule | Detail |
+|----------|--------|
+| Questions | 1–3 short questions in the **patient's language** |
+| Topics | Fever, pain level, duration, worsening symptoms |
+| Skip | Return `[]` when symptoms already complete |
+| Limit | Never more than 3 questions |
+
+### Medical Knowledge
+
+**Goal:** Grounded facts from Foundry IQ only.
+
+| Key rule | Detail |
+|----------|--------|
+| Tool | Must call `knowledge_base_retrieve` before answering |
+| Citations | End with `【source: document_name】` markers |
+| Safety | Never invent drugs, dosages, or facts not in retrieval |
+| Empty KB | Say grounded information was not found |
+
+### Patient Explanation
+
+**Goal:** Empathetic plain-language summary tied to the **report**, not vague wellness chat.
+
+| Key rule | Detail |
+|----------|--------|
+| Priority | Report findings first; connect symptoms to report when possible |
+| Phrasing | *"Your report shows…"* — never *"You have [condition]"* |
+| Literacy | `simple` = short sentences; `standard` = more detail |
+| Audience | `family` = warm grandmother-friendly tone and analogies |
+| Anatomy | Correct terms (middle ear, not temple) |
+| Language | **English only** — Multilingual agent translates later |
+| Treatment | *"Follow your doctor's plan"* — no new prescriptions |
+
+### Multilingual
+
+**Goal:** Translate and culturally adapt — preserve medical accuracy.
+
+| Key rule | Detail |
+|----------|--------|
+| Languages | Hindi, Spanish, Arabic, etc. |
+| Family mode | Warmer, simpler tone for elderly relatives |
+| Anatomy | Correct target-language terms (e.g. Hindi middle ear ≠ temple) |
+| Disclaimer | Required in **target language** — educational only, consult doctor |
+
+### Self-Reflection
+
+**Goal:** Catch ungrounded explanations before safety review.
+
+| Key rule | Detail |
+|----------|--------|
+| Output | JSON: `grounded`, `confidence`, `missing_topics`, `follow_up_query` |
+| Low confidence | Invented facts, ignored report findings, weak symptom link |
+| Retry | Optional `follow_up_query` triggers knowledge re-retrieval |
+
+### Safety
+
+**Goal:** Primary output guardrail — block unsafe medical advice.
+
+| Block | Allow |
+|-------|-------|
+| Direct diagnosis (*"you have X"*) without report framing | *"Your report shows…"* |
+| New prescriptions with drug names / dosages | Conditions named **from the report** with report framing |
+| Stop-treatment advice | Paraphrase report follow-up / doctor's plan |
+| Dismissing emergencies | *"As prescribed by your doctor"* |
+| — | Add *consult your doctor* if disclaimer missing |
+| — | Emergency symptoms → advise urgent care immediately |
+
+Rule-based checks in `agents/safety_agent.py` run **before** LLM review for fast paths; LLM fallback when flags are ambiguous.
+
+### Non-LLM guardrails
+
+| Layer | File | Prompt? |
+|-------|------|---------|
+| Input PII block | `agents/input_guardrails.py` | Regex rules (SSN, card, email) |
+| Output PII redact | `agents/output_guardrails.py` | Redaction + disclaimer enforcement |
+
+### Handoff workflow variant
+
+`orchestrator/handoff_workflow.py` reuses the same six agent prompts plus a **Triage** instruction for HandoffBuilder routing. Production UI uses the sequential orchestrator in `orchestrator/workflow.py`.
+
 ## Reliability
 
 All agents call `run_agent()` in `agents/base.py`:
