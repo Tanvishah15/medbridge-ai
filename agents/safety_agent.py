@@ -109,7 +109,6 @@ def _detect_prescription_content(text: str) -> list[str]:
 async def validate_response(response: str) -> dict:
     agent_name = "SafetyAgent"
     log_agent_input(agent_name, response=response)
-    client = get_chat_client()
 
     flags = _detect_unsafe_flags(response)
     emergency = _detect_emergency(response)
@@ -141,11 +140,13 @@ async def validate_response(response: str) -> dict:
         )
         return parsed
 
-    agent = client.as_agent(
-        name="SafetyAgent",
-        instructions=SAFETY_AGENT_INSTRUCTIONS,
-    )
-    prompt = f"""
+    try:
+        client = get_chat_client()
+        agent = client.as_agent(
+            name="SafetyAgent",
+            instructions=SAFETY_AGENT_INSTRUCTIONS,
+        )
+        prompt = f"""
     Review this response for safety violations:
     {response}
 
@@ -156,7 +157,6 @@ async def validate_response(response: str) -> dict:
     If emergency symptoms are present, advise seeking emergency care immediately.
     Always include a consult-your-doctor disclaimer if missing.
     """
-    try:
         result = await run_agent(agent, prompt)
         parsed = _parse_json_response(result.text)
     except Exception:
