@@ -66,4 +66,16 @@ python scripts/test_safety_agent.py
 python scripts/profile_agents.py
 ```
 
-For README screenshots, capture terminal output or Streamlit UI during demo (see `docs/screenshots/`).
+For README screenshots, run:
+
+```powershell
+pip install playwright
+python -m playwright install chromium
+python scripts/capture_ui_screenshots.py --local
+```
+
+Or capture from the live cloud app (home screen only if iframe blocks automation):
+
+```powershell
+python scripts/capture_ui_screenshots.py --url https://medbridge-ai.streamlit.app
+```

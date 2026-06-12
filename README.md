@@ -4,7 +4,13 @@ Multilingual Medical Reasoning & Patient Understanding Platform
 
 ## Demo UI
 
-![MedBridge AI Streamlit home screen](docs/screenshots/streamlit-ui-home.png)
+**Live demo:** [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app)
+
+![MedBridge AI — Demo 1 preset loaded (Hindi ENT)](docs/screenshots/streamlit-ui-demo-loaded.png)
+
+![Hindi explanation with safety validation and Foundry IQ sources](docs/screenshots/streamlit-ui-demo-ent.png)
+
+![Agent reasoning trace for judges](docs/screenshots/streamlit-ui-trace.png)
 
 Run locally:
 ```powershell
