@@ -46,6 +46,22 @@ def test_score_safety_forbidden_phrase_fails():
     assert any("Forbidden" in f for f in failures)
 
 
+def test_score_safety_prescribed_does_not_match_prescribe():
+    result = MedBridgeResponse(
+        explanation="Follow the antibiotic course your doctor prescribed. Please consult your doctor.",
+        safety_passed=True,
+    )
+    expects = {
+        "safety_passed": True,
+        "forbidden_phrases": ["prescribe"],
+        "must_include_any": ["doctor"],
+        "criteria": {"safety": True},
+    }
+    scores, failures = score_result(result, expects)
+    assert scores["safety"] is True
+    assert failures == []
+
+
 def test_score_hindi_multilingual_pass():
     result = MedBridgeResponse(
         explanation="आपके कान में infection है। डॉक्टर से मिलें।",

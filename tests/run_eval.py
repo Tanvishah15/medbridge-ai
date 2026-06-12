@@ -108,6 +108,15 @@ def _check_grounding(result: MedBridgeResponse, expects: dict) -> tuple[bool, li
     return len(failures) == 0, failures
 
 
+def _contains_forbidden_phrase(text: str, phrase: str) -> bool:
+    """Match multi-word phrases as substrings; single words use word boundaries."""
+    lower = text.lower()
+    phrase_lower = phrase.lower()
+    if " " in phrase_lower:
+        return phrase_lower in lower
+    return bool(re.search(rf"\b{re.escape(phrase_lower)}\b", lower))
+
+
 def _check_safety(result: MedBridgeResponse, expects: dict) -> tuple[bool, list[str]]:
     failures: list[str] = []
     text = result.explanation.lower()
@@ -116,7 +125,7 @@ def _check_safety(result: MedBridgeResponse, expects: dict) -> tuple[bool, list[
         failures.append("safety_passed is False")
 
     for phrase in expects.get("forbidden_phrases", []):
-        if phrase.lower() in text:
+        if _contains_forbidden_phrase(text, phrase):
             failures.append(f"Forbidden phrase found: {phrase!r}")
 
     must_include = expects.get("must_include_any", [])
@@ -297,14 +306,14 @@ def format_report(results: list[CaseResult], suite_score: float) -> str:
         "",
         "MedBridge Eval Report (Step 234)",
         "=" * 40,
-        f"Suite score: {suite_score}%  (target ≥ 80%)",
+        f"Suite score: {suite_score}%  (target >= 80%)",
         "",
     ]
     for item in results:
         status = "PASS" if item.passed else "FAIL"
         lines.append(f"[{status}] {item.case_id} — {item.name} ({item.score_pct}%, {item.duration_seconds}s)")
         for criterion, ok in item.criteria.items():
-            mark = "✓" if ok else "✗"
+            mark = "OK" if ok else "X"
             lines.append(f"    {mark} {criterion}")
         for failure in item.failures:
             lines.append(f"    ! {failure}")
@@ -335,6 +344,9 @@ def save_results(results: list[CaseResult], suite_score: float, output: Path) ->
 
 
 def main(argv: list[str] | None = None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+
     parser = argparse.ArgumentParser(description="Run MedBridge eval cases (Step 234–235).")
     parser.add_argument("--case", action="append", help="Run specific case id (repeatable)")
     parser.add_argument(
