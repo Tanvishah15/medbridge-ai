@@ -30,6 +30,34 @@ def console_exporters_enabled() -> bool:
     return False
 
 
+def _app_insights_connection_string() -> str:
+    return os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING", "").strip()
+
+
+def _setup_azure_monitor_export() -> bool:
+    """Step 237 — export client-side spans to Application Insights / Foundry Traces."""
+    connection_string = _app_insights_connection_string()
+    if not connection_string:
+        return False
+
+    try:
+        from azure.monitor.opentelemetry import configure_azure_monitor
+        from agent_framework.observability import enable_instrumentation
+
+        configure_azure_monitor(connection_string=connection_string)
+        enable_instrumentation(enable_sensitive_data=False)
+        return True
+    except ImportError:
+        logger.warning(
+            "APPLICATIONINSIGHTS_CONNECTION_STRING is set but azure-monitor-opentelemetry "
+            "is not installed. Run: pip install azure-monitor-opentelemetry"
+        )
+        return False
+    except Exception as exc:
+        logger.warning("Azure Monitor tracing export failed: %s", exc)
+        return False
+
+
 def setup_observability() -> bool:
     """Configure Agent Framework OpenTelemetry providers once at startup."""
     global _CONFIGURED
@@ -39,6 +67,13 @@ def setup_observability() -> bool:
         return False
 
     try:
+        if _setup_azure_monitor_export():
+            _CONFIGURED = True
+            logger.info(
+                "OpenTelemetry exporting to Azure Monitor — view in Foundry portal → Observability → Traces"
+            )
+            return True
+
         from agent_framework.observability import configure_otel_providers
 
         configure_otel_providers(

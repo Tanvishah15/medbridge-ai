@@ -83,4 +83,4 @@ See [evaluation_criteria.md](evaluation_criteria.md) for pass/fail definitions a
 
 ## Observability (Steps 236–237)
 
-Optional OpenTelemetry tracing via Agent Framework. Off by default; enable with `MEDBRIDGE_ENABLE_OTEL=true`. See [observability.md](observability.md).
+Optional OpenTelemetry tracing via Agent Framework. Off by default; enable with `MEDBRIDGE_ENABLE_OTEL=true`. See [observability.md](observability.md) and [foundry_tracing_setup.md](foundry_tracing_setup.md) (Step 237 portal).

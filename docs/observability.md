@@ -29,15 +29,26 @@ Console output shows OpenTelemetry spans for:
 
 ## Export to Azure Monitor / Foundry (Step 237)
 
-Set standard OTLP variables instead of console:
+Full portal guide: **[foundry_tracing_setup.md](foundry_tracing_setup.md)**
+
+Quick steps:
+
+1. Foundry project → connect **Application Insights**
+2. Copy **connection string** into `.env`:
+   ```env
+   MEDBRIDGE_ENABLE_OTEL=true
+   APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=...
+   OTEL_SERVICE_NAME=medbridge-ai
+   ```
+3. `pip install azure-monitor-opentelemetry`
+4. Run a workflow, wait 2–5 min
+5. Foundry → **Observability → Traces**
+
+For local debugging only (no portal), keep console export:
 
 ```env
-MEDBRIDGE_ENABLE_OTEL=true
-OTEL_EXPORTER_OTLP_ENDPOINT=https://<your-monitor-endpoint>
-OTEL_SERVICE_NAME=medbridge-ai
+MEDBRIDGE_OTEL_CONSOLE=true
 ```
-
-Then review traces in **Azure AI Foundry → your project → Tracing**.
 
 ## Implementation
 
