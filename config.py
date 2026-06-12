@@ -21,14 +21,14 @@ _SECRET_KEYS = (
 
 def _get_secret(name: str, default: str = "") -> str:
     """Read from os.environ first, then Streamlit Cloud secrets."""
-    env_val = os.environ.get(name, "").strip()
+    env_val = os.environ.get(name, "").strip().strip('"').strip("'")
     if env_val:
         return env_val
     try:
         import streamlit as st
 
         if name in st.secrets:
-            val = str(st.secrets[name]).strip()
+            val = str(st.secrets[name]).strip().strip('"').strip("'")
             if val:
                 os.environ[name] = val
                 return val
