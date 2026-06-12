@@ -77,7 +77,8 @@ python tests/run_eval.py --parity
 pytest tests/test_input_guardrails.py tests/test_output_guardrails.py tests/test_safety_report_framing.py -q
 ```
 
-Full pass criteria: [docs/evaluation_criteria.md](docs/evaluation_criteria.md)
+Full pass criteria: [docs/evaluation_criteria.md](docs/evaluation_criteria.md)  
+Canonical safety policy: [SAFETY.md](SAFETY.md)
 
 ## Architecture
 See [docs/architecture.md](docs/architecture.md)
