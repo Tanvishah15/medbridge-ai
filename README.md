@@ -92,6 +92,7 @@ Streamlit demo at [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.ap
 | **Demo loaded** | Hindi ENT preset — report + symptoms pre-filled |
 | **Explanation** | Hindi output, **Safety validated** badge, Foundry IQ sources |
 | **PDF upload** | Same liver PDF uploaded — explanation changes by sidebar language |
+| **Clarification** | Liver PDF + vague question → follow-up questions in sidebar language (French shown) |
 
 ### Home — demo presets & settings
 
@@ -121,7 +122,13 @@ Upload [`medbridge_demo_upload_liver.pdf`](data/synthetic_reports/medbridge_demo
 
 ![German explanation after uploading the same synthetic liver PDF](docs/screenshots/streamlit-ui-pdf-german-liver.png)
 
-Regenerate: `python scripts/capture_pdf_language_screenshots.py`
+### Language and Clarification Agent — French follow-up questions
+
+Upload the liver PDF, ask *"What is happening to me?"*, set **Language** to French — the Clarification Agent asks targeted questions in French before generating the explanation.
+
+![Language and Clarification Agent — French clarification loop with liver PDF upload](docs/screenshots/Language%20and%20Clarification%20Agent.png)
+
+Regenerate PDF language shots: `python scripts/capture_pdf_language_screenshots.py`
 
 ---
 
