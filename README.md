@@ -2,7 +2,7 @@
 
 > **"Don't just translate my medical report. Help me understand what's happening to me."**
 
-Multilingual medical reasoning platform — six Foundry agents, clarification loop, Foundry IQ grounding, and layered safety guardrails.
+Multilingual medical reasoning platform — six Foundry agents, clarification loop, Foundry IQ grounding, layered safety guardrails, and **8 output languages**.
 
 ![Tests](https://github.com/Tanvishah15/medbridge-ai/actions/workflows/test.yml/badge.svg)
 ![License: MIT](https://img.shields.io/github/license/Tanvishah15/medbridge-ai)
@@ -12,17 +12,17 @@ Multilingual medical reasoning platform — six Foundry agents, clarification lo
 
 ## Problem
 
-Patients receive lab reports, imaging results, and discharge summaries they **cannot understand** — often in medical English while they speak Hindi, Spanish, or Arabic at home. Generic translators miss clinical context, skip symptom-to-report matching, and can sound like a doctor diagnosing or prescribing. Families need **grounded, safe, plain-language explanations** — not a wall of jargon.
+Patients receive lab reports, imaging results, and discharge summaries they **cannot understand** — often in medical English while they speak **Hindi, Spanish, Arabic, Chinese, French, German, Gujarati**, or another language at home. Generic translators miss clinical context, skip symptom-to-report matching, and can sound like a doctor diagnosing or prescribing. Families need **grounded, safe, plain-language explanations** — not a wall of jargon.
 
 ## Solution
 
 **MedBridge AI** is a multi-agent reasoning system on **Microsoft Foundry** that:
 
-1. **Structures** uploaded synthetic reports (ENT, blood, MRI)
+1. **Structures** uploaded synthetic reports — paste text or **upload any PDF/TXT** demo file
 2. **Asks clarifying questions** when symptoms are incomplete (1–3 questions, max 2 rounds)
 3. **Retrieves grounded facts** from **Foundry IQ** with citations
 4. **Explains** in simple language matched to literacy and audience (patient vs family)
-5. **Translates** to Hindi, Spanish, or Arabic with culturally appropriate tone
+5. **Translates** to **English, Hindi, Spanish, Arabic, Chinese, French, German, or Gujarati** with culturally appropriate tone
 6. **Validates safety** — no diagnosis, prescription, or treatment-change advice
 
 ---
@@ -36,6 +36,7 @@ Patients receive lab reports, imaging results, and discharge summaries they **ca
 | **IQ integration** | Foundry IQ — Azure AI Search knowledge base with citations |
 | **Framework** | Microsoft Agent Framework (Python) |
 | **UI** | Streamlit (live on Streamlit Cloud) |
+| **Languages** | English, Hindi, Spanish, Arabic, Chinese, French, German, Gujarati |
 | **Eval suite** | 10 automated cases — **100% pass** (see [Evaluation](#evaluation)) |
 | **Demo video** | *[YouTube — add before submission](#demo-video)* |
 | **External links** | [docs/EXTERNAL_LINKS.md](docs/EXTERNAL_LINKS.md) |
@@ -60,7 +61,7 @@ Full design: [docs/architecture.md](docs/architecture.md) · Observability: [doc
 | **Clarification** | Asks follow-up questions when symptoms are vague |
 | **Medical Knowledge** | Foundry IQ retrieval with citations |
 | **Patient Explanation** | Empathetic plain-language summary |
-| **Multilingual** | Hindi, Spanish, Arabic (family/grandmother tone) |
+| **Multilingual** | English, Hindi, Spanish, Arabic, Chinese, French, German, Gujarati (family/grandmother tone) |
 | **Safety** | Blocks diagnosis / prescription / stop-medication advice |
 
 All agents: 30s timeout, 1 retry, structured logging. See [docs/sample_outputs.md](docs/sample_outputs.md).
@@ -83,11 +84,14 @@ Script and judge talking points: [docs/demo_scenarios.md](docs/demo_scenarios.md
 
 Streamlit demo at [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app). Regenerate locally: `python scripts/capture_ui_screenshots.py`
 
+**Upload any synthetic PDF or TXT** — no preset required. Demo files: [`data/synthetic_reports/medbridge_demo_upload_liver.pdf`](data/synthetic_reports/medbridge_demo_upload_liver.pdf) (liver), [`medbridge_demo_upload_kidney.pdf`](data/synthetic_reports/medbridge_demo_upload_kidney.pdf) (kidney), [`medbridge_demo_upload_ent.pdf`](data/synthetic_reports/medbridge_demo_upload_ent.pdf) (ENT).
+
 | Screen | What judges should notice |
 |--------|---------------------------|
 | **Home** | Disclaimer banner, demo presets, language / audience settings |
 | **Demo loaded** | Hindi ENT preset — report + symptoms pre-filled |
 | **Explanation** | Hindi output, **Safety validated** badge, Foundry IQ sources |
+| **PDF upload** | Same liver PDF uploaded — explanation changes by sidebar language |
 
 ### Home — demo presets & settings
 
@@ -101,6 +105,24 @@ Streamlit demo at [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.ap
 
 ![Hindi explanation with safety validated badge and knowledge sources](docs/screenshots/streamlit-ui-demo-ent.png)
 
+### PDF upload — same liver report, three languages
+
+Upload [`medbridge_demo_upload_liver.pdf`](data/synthetic_reports/medbridge_demo_upload_liver.pdf), ask *"Please explain this liver lab report in simple language"*, then switch **Language** in the sidebar. Same synthetic PDF → Chinese, French, or German explanation.
+
+| Language | Output |
+|----------|--------|
+| **Chinese** | Liver enzymes (ALT/AST) explained in Mandarin with safety disclaimer |
+| **French** | Same report framed as *Votre rapport montre…* with doctor follow-up |
+| **German** | Same report in German with *Ihr Bericht zeigt…* and safety badge |
+
+![Chinese explanation after uploading the same synthetic liver PDF](docs/screenshots/streamlit-ui-pdf-chinese-liver.png)
+
+![French explanation after uploading the same synthetic liver PDF](docs/screenshots/streamlit-ui-pdf-french-liver.png)
+
+![German explanation after uploading the same synthetic liver PDF](docs/screenshots/streamlit-ui-pdf-german-liver.png)
+
+Regenerate: `python scripts/capture_pdf_language_screenshots.py`
+
 ---
 
 ## Reasoning trace
@@ -113,7 +135,7 @@ Every run exposes an **expandable agent trace** at the bottom of the Streamlit U
 | ❓ | Clarification | Questions asked or skipped |
 | 📚 | Medical Knowledge | Foundry IQ queries + retrieved answer |
 | 💬 | Patient Explanation | English draft explanation |
-| 🌐 | Multilingual | Translated text (Hindi / Spanish / Arabic) |
+| 🌐 | Multilingual | Translated text (English / Hindi / Spanish / Arabic / Chinese / French / German / Gujarati) |
 | 🛡️ | Safety | Pass/fail + revised response |
 | — | Output Guardrails | PII redaction + disclaimer (in workflow trace) |
 
@@ -284,7 +306,7 @@ Latest run: [`tests/eval_results_full.json`](tests/eval_results_full.json)
 |-----------|------------|-------------|
 | **Grounding** | 002–005, 007–010 | Foundry IQ citations or report terms in answer |
 | **Safety** | 002–005, 007–010 | No diagnosis/prescription; doctor redirect |
-| **Multilingual** | 002–005 | Hindi / Spanish / Arabic / English output |
+| **Multilingual** | 002–005 | Hindi / Spanish / Arabic / English in eval; app supports 8 languages |
 | **Clarification** | 001, 006, 007 | Ask when vague; skip when complete |
 | **Symptom match** | 002–005, 007 | Links user symptoms to report findings |
 
@@ -398,7 +420,7 @@ cd medbridge-ai
 streamlit run ui/app.py
 ```
 
-Open **http://localhost:8501** → choose a demo preset (e.g. Hindi ENT) → click **Understand My Report**.
+Open **http://localhost:8501** → choose a demo preset (e.g. Hindi ENT) **or upload any synthetic PDF/TXT** → click **Understand My Report**.
 
 **Live (no install):** [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app)
 
