@@ -28,7 +28,11 @@ RESULTS_FILE = Path(__file__).resolve().parent / "eval_results.json"
 
 DEVANAGARI_RE = re.compile(r"[\u0900-\u097F]")
 ARABIC_RE = re.compile(r"[\u0600-\u06FF]")
+GUJARATI_RE = re.compile(r"[\u0A80-\u0AFF]")
+CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 SPANISH_HINTS = ("glucosa", "azúcar", "azucar", "médico", "medico", "información", "consulte", "aviso")
+FRENCH_HINTS = ("médecin", "medecin", "consultez", "avis", "information", "santé", "sante", "pas un avis")
+GERMAN_HINTS = ("arzt", "ärzt", "beratung", "hinweis", "informationen", "bitte konsultieren", "medizin")
 
 
 @dataclass
@@ -78,6 +82,24 @@ def _check_language(text: str, language: str) -> tuple[bool, str]:
         if ARABIC_RE.search(text):
             return True, ""
         return False, "Expected Arabic script in explanation"
+    if lang == "chinese":
+        if CJK_RE.search(text):
+            return True, ""
+        return False, "Expected Chinese characters in explanation"
+    if lang == "french":
+        lower = text.lower()
+        if any(term in lower for term in FRENCH_HINTS) or "é" in lower or "à" in lower:
+            return True, ""
+        return False, "Expected French vocabulary or accents"
+    if lang == "german":
+        lower = text.lower()
+        if any(term in lower for term in GERMAN_HINTS) or "ü" in lower or "ä" in lower or "ß" in lower:
+            return True, ""
+        return False, "Expected German vocabulary or umlauts"
+    if lang == "gujarati":
+        if GUJARATI_RE.search(text):
+            return True, ""
+        return False, "Expected Gujarati script in explanation"
     if lang == "english":
         if len(text.strip()) > 0:
             return True, ""

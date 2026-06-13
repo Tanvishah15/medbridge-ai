@@ -47,6 +47,15 @@ MULTILINGUAL_DISCLAIMER_MARKERS = [
     "طبيب",
     "استشر",
     "تنبيه",
+    "医生",
+    "免责声明",
+    "咨询",
+    "médecin",
+    "Consultez",
+    "Arzt",
+    "Hinweis",
+    "ડોક્ટર",
+    "અસ્વીકરણ",
 ]
 
 DURATION_MARKERS = [

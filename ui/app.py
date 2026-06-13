@@ -225,7 +225,16 @@ st.sidebar.caption(
 
 language = st.sidebar.selectbox(
     "Language",
-    ["English", "Hindi", "Spanish", "Arabic"],
+    [
+        "English",
+        "Hindi",
+        "Spanish",
+        "Arabic",
+        "Chinese",
+        "French",
+        "German",
+        "Gujarati",
+    ],
     key="ui_language",
 )
 audience = st.sidebar.selectbox(

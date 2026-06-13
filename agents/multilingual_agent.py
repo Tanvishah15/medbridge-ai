@@ -25,6 +25,22 @@ LANGUAGE_FALLBACK_DISCLAIMERS = {
         "\n\nتنبيه: هذه معلومات تعليمية وليست نصيحة طبية. "
         "يرجى استشارة طبيبك."
     ),
+    "chinese": (
+        "\n\n免责声明：本内容仅供科普教育，并非医疗建议。"
+        "请咨询您的医生。"
+    ),
+    "french": (
+        "\n\nAvis : Ces informations sont à titre éducatif et ne constituent pas "
+        "un avis médical. Consultez votre médecin."
+    ),
+    "german": (
+        "\n\nHinweis: Diese Informationen dienen nur zu Bildungszwecken und stellen "
+        "keine medizinische Beratung dar. Bitte konsultieren Sie Ihren Arzt."
+    ),
+    "gujarati": (
+        "\n\nઅસ્વીકરણ: આ માહિતી શૈક્ષણિક છે, તબીબી સલાહ નથી. "
+        "કૃપા કરીને તમારા ડોક્ટરની સલાહ લો."
+    ),
 }
 
 
