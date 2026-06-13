@@ -48,21 +48,6 @@ Patients receive lab reports, imaging results, and discharge summaries they **ca
 
 *Diagram source:* [docs/architecture_diagram.mmd](docs/architecture_diagram.mmd) — regenerate with `npx @mermaid-js/mermaid-cli -i docs/architecture_diagram.mmd -o docs/screenshots/architecture-diagram.png`
 
-```mermaid
-flowchart TD
-    U[User — Streamlit UI] --> IG[Input Guardrails]
-    IG --> B[Orchestrator]
-    B --> C[Document Intelligence Agent]
-    C --> D[Clarification Agent]
-    D -->|needs info| U
-    D --> E[Medical Knowledge Agent + Foundry IQ]
-    E --> F[Patient Explanation Agent]
-    F --> G[Multilingual Agent]
-    G --> H[Safety Agent]
-    H --> OG[Output Guardrails]
-    OG --> U
-```
-
 Full design: [docs/architecture.md](docs/architecture.md) · Observability: [docs/observability.md](docs/observability.md)
 
 ---
