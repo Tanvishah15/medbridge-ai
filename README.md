@@ -501,14 +501,6 @@ streamlit run ui/app.py
 | **Live app** | [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app) |
 | **Script** | [docs/DEMO_NARRATION.md](docs/DEMO_NARRATION.md) · [docs/DEMO_SCRIPT_2MIN.md](docs/DEMO_SCRIPT_2MIN.md) |
 
-### 2-min demo outline (submission video)
-
-1. **Intro** — MedBridge AI, synthetic demo only  
-2. **Hindi demo** — PDF/report → Hindi explanation + Safety validated  
-3. **Spanish demo** — same pipeline, different language  
-4. **Reasoning trace** — six agents visible in UI  
-5. **Closing** — README screenshots for other languages · live app link
-
 ---
 
 ## Team
