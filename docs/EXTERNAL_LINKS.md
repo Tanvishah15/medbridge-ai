@@ -13,7 +13,8 @@
 | [GitHub repo — Tanvishah15/medbridge-ai](https://github.com/Tanvishah15/medbridge-ai) | README, clone instructions |
 | [GitHub Actions — Tests badge](https://github.com/Tanvishah15/medbridge-ai/actions/workflows/test.yml) | README CI badge |
 | [shields.io — License badge](https://img.shields.io/github/license/Tanvishah15/medbridge-ai) | README MIT badge |
-| [YouTube demo placeholder](https://youtu.be/REPLACE_WITH_VIDEO_ID) | README (replace after upload) |
+| [YouTube — 2-min demo](https://youtu.be/iTEBG35eRPg) | Hackathon submission video |
+| [YouTube — Architecture + demo](https://youtu.be/fXr6BEfvm8o) | Extended walkthrough |
 
 ---
 

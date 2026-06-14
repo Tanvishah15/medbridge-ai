@@ -38,7 +38,7 @@ Patients receive lab reports, imaging results, and discharge summaries they **ca
 | **UI** | Streamlit (live on Streamlit Cloud) |
 | **Languages** | English, Hindi, Spanish, Arabic, Chinese, French, German, Gujarati |
 | **Eval suite** | 10 automated cases — **100% pass** (see [Evaluation](#evaluation)) |
-| **Demo video** | *[YouTube — add before submission](#demo-video)* |
+| **Demo video** | [2-min demo](https://youtu.be/iTEBG35eRPg) · [Architecture + demo](https://youtu.be/fXr6BEfvm8o) |
 | **External links** | [docs/EXTERNAL_LINKS.md](docs/EXTERNAL_LINKS.md) |
 
 ---
@@ -492,32 +492,22 @@ streamlit run ui/app.py
 
 ## Demo video
 
-> **3–5 minute walkthrough** for hackathon judges. Replace the placeholder URL after you upload to YouTube (unlisted or public).
+> **Hackathon submission:** 2-minute demo (Agents League limit). Extended walkthrough includes architecture + live demos.
 
 | | |
 |---|---|
-| **Watch** | **[YouTube — MedBridge AI Demo](https://youtu.be/REPLACE_WITH_VIDEO_ID)** *(placeholder)* |
-| **Live app** | [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app) *(if video not yet uploaded)* |
-| **Script** | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
+| **2-min demo** | **[YouTube — MedBridge AI Demo](https://youtu.be/iTEBG35eRPg)** — Hindi & Spanish live demos, reasoning trace |
+| **Architecture + demo** | **[YouTube — Architecture & Demo Walkthrough](https://youtu.be/fXr6BEfvm8o)** — full agent pipeline + multilingual outputs |
+| **Live app** | [medbridge-ai.streamlit.app](https://medbridge-ai.streamlit.app) |
+| **Script** | [docs/DEMO_NARRATION.md](docs/DEMO_NARRATION.md) · [docs/DEMO_SCRIPT_2MIN.md](docs/DEMO_SCRIPT_2MIN.md) |
 
-### Suggested video outline (~4 min)
+### 2-min demo outline (submission video)
 
-1. **Problem + architecture** (30s) — six agents, Foundry IQ, safety layers  
-2. **Demo 1 — Hindi ENT** (90s) — clarification loop → Hindi explanation → reasoning trace  
-3. **Demo 2 — Spanish grandmother** (60s) — family tone + citations  
-4. **Safety + adversarial** (45s) — show safety badge; *"Prescribe me antibiotics"* blocked  
-5. **Foundry IQ portal** (30s) — KB test agent with cited retrieval  
-
-### Before submission
-
-1. Record and edit the demo (see playbook Steps 271–280)  
-2. Upload to YouTube  
-3. Replace `REPLACE_WITH_VIDEO_ID` in this README with your video ID  
-
-```markdown
-<!-- Example after upload -->
-https://youtu.be/abc123xyz
-```
+1. **Intro** — MedBridge AI, synthetic demo only  
+2. **Hindi demo** — PDF/report → Hindi explanation + Safety validated  
+3. **Spanish demo** — same pipeline, different language  
+4. **Reasoning trace** — six agents visible in UI  
+5. **Closing** — README screenshots for other languages · live app link
 
 ---
 
